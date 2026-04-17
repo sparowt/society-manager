@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "com.ats.societymanager",
-        "sha256_cert_fingerprints": ["F5:BC:1D:D0:5A:3E:21:C0:3E:90:9B:1A:B0:FE:6A:4C:62:51:5A:68:34:1F:67:5C:E2:DA:DE:B4:5B:9E:6A:BE"]
-      }
-    }]
