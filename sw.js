@@ -1,1 +1,1 @@
-const OFFLINE_PAGE = './SocietyMaintenanceTool_v5_pwa.html';
+const OFFLINE_PAGE = '/society-manager/index.html';
