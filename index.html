@@ -1,0 +1,2858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Society Manager">
+<meta name="application-name" content="Society Manager">
+<meta name="theme-color" content="#0f1117">
+<meta name="description" content="Society Maintenance & Expense Manager — Works offline">
+<link rel="manifest" href="/society-manager/manifest.json">
+<link rel="apple-touch-icon" href="/society-manager/icon-192.png">
+<title>Society Maintenance Manager</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg:#0f1117; --surface:#181c27; --surface2:#1e2433; --border:#2a3147;
+    --accent:#4f8ef7; --accent2:#34d6a0; --warn:#f7934f; --danger:#f74f6a;
+    --purple:#a78bfa; --teal:#38bdf8; --text:#e8eaf2; --muted:#7a82a0; --radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+  .mr{font-family:'Noto Sans Devanagari','DM Sans',sans-serif;} /* Marathi names only */
+
+  /* HEADER */
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;flex-wrap:wrap;}
+  .logo{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+  header h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;}
+  header h1 span{color:var(--accent);}
+  .subtitle{font-size:11px;color:var(--muted);}
+  .month-select{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .month-select label{font-size:11px;color:var(--muted);}
+
+  /* INPUTS */
+  select,input[type=text],input[type=number],input[type=date]{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:7px 10px;
+    font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;
+  }
+  select:focus,input:focus{border-color:var(--accent);}
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+
+  /* CHECKBOX */
+  input[type=checkbox]{
+    width:17px;height:17px;cursor:pointer;accent-color:var(--accent2);
+    flex-shrink:0;
+  }
+
+  /* NAV */
+  nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  nav button{background:none;border:none;color:var(--muted);padding:10px 15px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;}
+  nav button.active{color:var(--accent);border-bottom-color:var(--accent);}
+  nav button:hover:not(.active){color:var(--text);}
+
+  /* LAYOUT */
+  main{padding:16px;max-width:1020px;margin:0 auto;}
+  .tab{display:none;} .tab.active{display:block;}
+
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .card h2{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:13px;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;}
+
+  /* STAT GRID */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-bottom:14px;}
+  .stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;position:relative;overflow:hidden;}
+  .stat-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .stat-box.blue::before{background:var(--accent);} .stat-box.green::before{background:var(--accent2);}
+  .stat-box.orange::before{background:var(--warn);} .stat-box.red::before{background:var(--danger);}
+  .stat-box.purple::before{background:var(--purple);} .stat-box.teal::before{background:var(--teal);}
+  .stat-box .lbl{font-size:10px;color:var(--muted);margin-bottom:4px;}
+  .stat-box .val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1;}
+  .stat-box.blue .val{color:var(--accent);} .stat-box.green .val{color:var(--accent2);}
+  .stat-box.orange .val{color:var(--warn);} .stat-box.red .val{color:var(--danger);}
+  .stat-box.purple .val{color:var(--purple);} .stat-box.teal .val{color:var(--teal);}
+
+  /* TABLE */
+  .tbl-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:7px 10px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(79,142,247,.03);}
+
+  /* BADGES */
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+  .badge-green{background:rgba(52,214,160,.15);color:var(--accent2);}
+  .badge-red{background:rgba(247,79,106,.15);color:var(--danger);}
+  .badge-orange{background:rgba(247,147,79,.15);color:var(--warn);}
+  .badge-blue{background:rgba(79,142,247,.15);color:var(--accent);}
+  .badge-purple{background:rgba(167,139,250,.15);color:var(--purple);}
+  .badge-teal{background:rgba(56,189,248,.15);color:var(--teal);}
+
+  /* FORM */
+  .form-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-bottom:11px;}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-group label{font-size:11px;color:var(--muted);}
+  .form-group input,.form-group select{width:100%;}
+
+  /* BUTTONS */
+  .btn{padding:8px 15px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
+  .btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:#3a7aee;}
+  .btn-success{background:var(--accent2);color:#0a1a14;} .btn-success:hover{background:#28c490;}
+  .btn-warn{background:var(--warn);color:#fff;} .btn-warn:hover{background:#e07a30;}
+  .btn-danger{background:var(--danger);color:#fff;font-size:10px;padding:4px 8px;} .btn-danger:hover{background:#e03050;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);} .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-purple{background:var(--purple);color:#fff;font-size:10px;padding:4px 8px;} .btn-purple:hover{background:#9068f5;}
+  .btn-teal{background:var(--teal);color:#08202e;font-size:10px;padding:4px 8px;} .btn-teal:hover{background:#29aadf;}
+  .btn-sm{padding:5px 10px;font-size:11px;}
+
+  .pay-input{width:85px;padding:5px 7px;text-align:right;}
+  .due-input{width:75px;padding:5px 7px;text-align:right;}
+
+  /* PROGRESS */
+  .progress-wrap{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;width:60px;}
+  .progress-bar{height:100%;border-radius:4px;transition:width .4s;}
+
+  /* ALERT */
+  .alert{padding:9px 13px;border-radius:8px;margin-bottom:12px;font-size:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+  .alert-info{background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);color:var(--accent);}
+  .alert-success{background:rgba(52,214,160,.1);border:1px solid rgba(52,214,160,.3);color:var(--accent2);}
+  .alert-warn{background:rgba(247,147,79,.1);border:1px solid rgba(247,147,79,.3);color:var(--warn);}
+  .alert-teal{background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);color:var(--teal);}
+  .alert-danger{background:rgba(247,79,106,.1);border:1px solid rgba(247,79,106,.3);color:var(--danger);}
+
+  /* OWNER GRID */
+  .owner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:9px;}
+  .owner-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:9px;transition:border-color .2s;}
+  .owner-card:hover{border-color:var(--accent);}
+  .owner-avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;flex-shrink:0;color:#fff;}
+  .owner-info .flat{font-size:10px;color:var(--muted);}
+  .owner-info .name{font-size:12px;font-weight:500;font-family:'Noto Sans Devanagari','DM Sans',sans-serif;}
+  .owner-info .due-badge{font-size:10px;color:var(--accent2);}
+  .owner-actions{margin-left:auto;display:flex;gap:4px;}
+
+  /* DATA CORRECTION */
+  .correction-month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:14px;}
+  .correction-month-btn{
+    background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;cursor:pointer;transition:all .2s;text-align:center;
+  }
+  .correction-month-btn:hover{border-color:var(--accent);}
+  .correction-month-btn.has-data{border-color:var(--warn);background:rgba(247,147,79,.06);}
+  .correction-month-btn .cm-lbl{font-size:11px;color:var(--muted);}
+  .correction-month-btn .cm-val{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);}
+  .correction-month-btn .cm-data{font-size:10px;color:var(--warn);margin-top:3px;}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;padding:16px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto;}
+  .modal h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:15px;}
+  .modal .form-group{margin-bottom:11px;}
+  .modal .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:15px;}
+  .transfer-history{margin-top:10px;font-size:11px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:8px 10px;max-height:90px;overflow-y:auto;}
+  .transfer-history p{margin-bottom:3px;}
+
+  /* BAR CHART */
+  .bar-chart{display:flex;flex-direction:column;gap:7px;}
+  .bar-row{display:flex;align-items:center;gap:8px;}
+  .bar-label{font-size:11px;color:var(--muted);width:100px;flex-shrink:0;text-align:right;}
+  .bar-track{flex:1;background:var(--surface2);border-radius:4px;height:19px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-weight:600;color:#fff;min-width:2px;transition:width .5s;}
+
+  /* MONTH CHIPS */
+  .month-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px;}
+  .chip{padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:11px;cursor:pointer;transition:all .15s;background:var(--surface2);color:var(--muted);}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+  .chip:hover:not(.active){border-color:var(--accent);color:var(--text);}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--accent2);color:#0a1a14;padding:9px 18px;border-radius:30px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999;white-space:nowrap;}
+  #toast.show{opacity:1;}
+
+  /* Paid row highlight */
+  tr.row-paid td{background:rgba(52,214,160,.04);}
+
+  @media print{
+    header,nav,.no-print{display:none!important;}
+    body{background:#fff;color:#000;}
+    .card{border:1px solid #ccc;break-inside:avoid;background:#fff;}
+    td,th{color:#000!important;border-color:#ccc!important;}
+  }
+  @media(max-width:600px){
+    main{padding:10px;}
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .form-row{grid-template-columns:1fr;}
+  }
+  @media(max-width:700px){.dash-cols{grid-template-columns:1fr!important;}}
+  @media(max-width:800px){.chart-row{grid-template-columns:1fr!important;}}
+  canvas{display:block;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<!-- ══ TRANSFER MODAL ══ -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal">
+    <h3 style="color:var(--warn)">🔄 Member Transfer</h3>
+    <input type="hidden" id="transferFlat">
+    <div class="form-group"><label>Room No.</label><input type="text" id="transferFlatDisp" disabled></div>
+    <div class="form-group"><label>Current Name</label><input type="text" id="transferOldName" disabled style="color:var(--muted)"></div>
+    <div class="form-group"><label>New Member Name *</label><input type="text" id="transferNewName" placeholder="Full name of new officer" class="mr"></div>
+    <div class="form-group"><label>New Monthly Due (₹) — leave blank to keep same</label><input type="number" id="transferNewDue" placeholder="Optional"></div>
+    <div class="form-group"><label>Transfer Date</label><input type="date" id="transferDate"></div>
+    <div class="form-group"><label>Transfer Order No. / Remarks</label><input type="text" id="transferNote" placeholder="Order no. or reason"></div>
+    <div class="transfer-history" id="transferHistory"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('transferModal')">Cancel</button>
+      <button class="btn btn-warn" onclick="doTransfer()">✅ Save Transfer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DUE MODAL ══ -->
+<div class="modal-overlay" id="dueModal">
+  <div class="modal">
+    <h3 style="color:var(--accent2)">💰 Change Monthly Due</h3>
+    <input type="hidden" id="dueFlatNo">
+    <div class="form-group"><label>Room No.</label><input type="text" id="dueFlatDisp" disabled></div>
+    <div class="form-group"><label>Member Name</label><input type="text" id="dueOwnerName" disabled style="color:var(--muted)"></div>
+    <div class="form-group"><label>Current Monthly Due (₹)</label><input type="number" id="dueCurrent" disabled style="color:var(--muted)"></div>
+    <div class="form-group"><label>New Monthly Due (₹) *</label><input type="number" id="dueNew" placeholder="Enter new amount"></div>
+    <div class="form-group"><label>Reason (optional)</label><input type="text" id="dueNote" placeholder="e.g. Society resolution dated 1/1/2026"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('dueModal')">Cancel</button>
+      <button class="btn btn-success" onclick="saveDueChange()">✅ Update Due</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DATA CORRECTION MODAL ══ -->
+<div class="modal-overlay" id="correctionModal">
+  <div class="modal" style="max-width:520px;">
+    <h3 style="color:var(--danger)">🛠️ Correct / Clear Month Data</h3>
+    <div class="alert alert-danger" style="font-size:11px;">
+      ⚠️ Use this to fix data entered in the wrong month. You can view and clear maintenance payments and/or expenses for any month.
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Select Month to Correct</label>
+      <select id="correctionMonthSel" onchange="loadCorrectionPreview()"></select>
+    </div>
+    <div id="correctionPreview"></div>
+    <div class="btn-row" style="flex-wrap:wrap;gap:6px;">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('correctionModal')">Close</button>
+      <button class="btn btn-warn btn-sm" onclick="clearCorrectionMaint()">🗑️ Clear Maintenance Data</button>
+      <button class="btn btn-warn btn-sm" onclick="clearCorrectionExp()">🗑️ Clear Expense Data</button>
+      <button class="btn btn-danger btn-sm" onclick="clearCorrectionAll()">🗑️ Clear ALL Data for this Month</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">🏢</div>
+  <div>
+    <h1>Society <span>Manager</span></h1>
+    <div class="subtitle" id="societySubtitle">Government Officers Quarters</div>
+  </div>
+  <div class="month-select">
+    <label>Month:</label>
+    <select id="globalMonth" onchange="onMonthChange()"></select>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('dashboard',this)">📊 Dashboard</button>
+  <button onclick="showTab('owners',this)">👥 Members</button>
+  <button onclick="showTab('maintenance',this)">💰 Maintenance</button>
+  <button onclick="showTab('expenses',this)">📋 Expenses</button>
+  <button onclick="showTab('prevbal',this)">🔙 Prev. Balance</button>
+  <button onclick="showTab('reports',this)">📈 Reports</button>
+  <button onclick="showTab('correction',this)">🛠️ Data Correction</button>
+  <button onclick="showTab('settings',this)">⚙️ Settings</button>
+</nav>
+
+<main>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="tab-dashboard" class="tab active">
+  <div class="stat-grid" id="dashStats"></div>
+
+  <!-- Charts Row -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;" class="chart-row">
+    <div class="card" style="margin:0">
+      <h2>🍩 Collection Status</h2>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <canvas id="chartDonut" width="180" height="180"></canvas>
+        <div id="chartDonutLegend" style="font-size:11px;width:100%;"></div>
+      </div>
+    </div>
+    <div class="card" style="margin:0">
+      <h2>💸 Expense Breakdown</h2>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <canvas id="chartExpPie" width="180" height="180"></canvas>
+        <div id="chartExpLegend" style="font-size:11px;width:100%;"></div>
+      </div>
+    </div>
+    <div class="card" style="margin:0">
+      <h2>📊 Monthly Trend</h2>
+      <canvas id="chartBar" width="260" height="180" style="width:100%;"></canvas>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" class="dash-cols">
+    <div class="card" style="margin:0"><h2>📈 Collected vs Expenses</h2><canvas id="chartCompare" width="320" height="160" style="width:100%;"></canvas></div>
+    <div class="card" style="margin:0"><h2>🔴 Defaulters</h2><div id="defaulterList"></div></div>
+  </div>
+  <div class="card"><h2>📅 Yearly Summary</h2><div class="tbl-wrap" id="yearlyOverview"></div></div>
+</div>
+
+<!-- ══ MEMBERS ══ -->
+<div id="tab-owners" class="tab">
+  <div class="alert alert-warn no-print">
+    ⚠️ This is a Government Officers Quarters. Use <strong>🔄</strong> for transfers. Use <strong>💰</strong> to change monthly due for a specific flat.
+  </div>
+  <div class="card">
+    <h2>➕ Add New Member</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Room No.</label><input type="text" id="newFlat" placeholder="e.g. 101"></div>
+      <div class="form-group"><label>Member Name</label><input type="text" id="newOwner" placeholder="Full name" class="mr"></div>
+      <div class="form-group"><label>Monthly Due (₹)</label><input type="number" id="newMaintAmt" placeholder="2000"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addOwner()">Add Member</button>
+  </div>
+  <div class="card">
+    <h2>🏠 All Members (<span id="ownerCount">0</span>)</h2>
+    <div style="margin-bottom:10px;" class="no-print">
+      <input type="text" id="ownerSearch" placeholder="🔍 Search name / room..." style="width:220px;" oninput="renderOwners()">
+    </div>
+    <div class="owner-grid" id="ownerGrid"></div>
+  </div>
+</div>
+
+<!-- ══ MAINTENANCE ══ -->
+<div id="tab-maintenance" class="tab">
+  <div class="card">
+    <h2>💰 Maintenance Collection — <span id="maintMonthLabel"></span></h2>
+    <div class="alert alert-info no-print">
+      ℹ️ Tick the <strong>✓ Paid</strong> checkbox to auto-fill the due amount. You can also edit amount manually for partial payments. Monthly Due column is editable inline.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Room</th>
+          <th>Member</th>
+          <th>Monthly Due (₹)</th>
+          <th>Prev. Balance (₹)</th>
+          <th>Total Due (₹)</th>
+          <th style="text-align:center;">✓ Paid</th>
+          <th>Amount Paid (₹)</th>
+          <th>Balance (₹)</th>
+          <th>Status</th>
+          <th>%</th>
+        </tr></thead>
+        <tbody id="maintBody"></tbody>
+        <tfoot id="maintFoot"></tfoot>
+      </table>
+    </div>
+    <br>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-success" onclick="saveMaintenance()">💾 Save</button>
+      <button class="btn btn-outline btn-sm no-print" onclick="markAllPaid()">✅ Mark All as Paid</button>
+      <button class="btn btn-outline btn-sm no-print" onclick="clearAllMaint()">🗑️ Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPENSES ══ -->
+<div id="tab-expenses" class="tab">
+  <div class="card">
+    <h2>➕ Add Expense — <span id="expMonthLabel"></span></h2>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label>
+        <select id="expCategory">
+          <option>Electricity Bill</option><option>Lift Maintenance</option>
+          <option>Cleaning</option><option>Security</option>
+          <option>Water</option><option>Repairs</option><option>Others</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Custom Category (optional)</label><input type="text" id="expCustomCat" placeholder="New category name"></div>
+      <div class="form-group"><label>Description</label><input type="text" id="expDesc" placeholder="Brief description"></div>
+      <div class="form-group"><label>Amount (₹)</label><input type="number" id="expAmount" placeholder="0"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addExpense()">Add Expense</button>
+  </div>
+  <div class="card">
+    <h2>📋 Expenses This Month — <span id="expMonthLabel2"></span></h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Category</th><th>Description</th><th>Amount (₹)</th><th></th></tr></thead>
+        <tbody id="expBody"></tbody>
+        <tfoot id="expFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PREVIOUS BALANCE ══ -->
+<div id="tab-prevbal" class="tab">
+  <div class="alert alert-teal">
+    📌 <div><strong>Opening / Previous Balance</strong><br>
+    If you are starting this tool mid-year (e.g. from Jan 2026), enter the previous arrears or advance for each flat here. This will appear as <strong>"Prev. Balance"</strong> in the Maintenance tab.<br>
+    • <strong>Positive (+)</strong> = Arrears (amount still owed by flat)<br>
+    • <strong>Negative (-)</strong> = Advance (flat paid extra, refund due)
+    </div>
+  </div>
+  <div class="card">
+    <h2>🏦 Society Fund Opening Balance</h2>
+    <div class="alert alert-info" style="font-size:11px;">Enter the total fund balance available (bank + cash) when you started using this tool.</div>
+    <div class="form-row">
+      <div class="form-group"><label>Opening Month</label><select id="openingMonth"></select></div>
+      <div class="form-group"><label>Opening Balance (₹)</label><input type="number" id="openingBalance" placeholder="e.g. 15000"></div>
+      <div class="form-group"><label>Notes</label><input type="text" id="openingNote" placeholder="e.g. Bank balance as on 31/12/2025"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveOpeningBalance()">💾 Save</button>
+    <div id="openingBalDisplay" style="margin-top:10px;font-size:12px;color:var(--accent2);"></div>
+  </div>
+  <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+  <div class="card">
+    <h2>🏠 Flat-wise Previous Arrears / Advance</h2>
+    <div class="alert alert-info" style="font-size:11px;">Enter previous arrears (positive) or advance paid (negative) for each flat. Save to apply in Maintenance tab.</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Room</th><th>Member</th><th>Arrears / Advance (₹)</th><th>Note</th><th>Status</th></tr></thead>
+        <tbody id="prevBalBody"></tbody>
+        <tfoot id="prevBalFoot"></tfoot>
+      </table>
+    </div>
+    <br>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-success" onclick="savePrevBalance()">💾 Save Previous Balance</button>
+      <button class="btn btn-outline btn-sm" onclick="clearAllPrevBal()">🗑️ Reset All to Zero</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REPORTS ══ -->
+<div id="tab-reports" class="tab">
+  <div class="card no-print">
+    <h2>📅 Select Month</h2>
+    <div class="month-chips" id="reportMonthChips"></div>
+  </div>
+  <div id="reportContent">
+    <div class="stat-grid" id="reportStats"></div>
+    <div class="card">
+      <h2>🏠 Flat-wise Collection</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Room</th><th>Member</th><th>Monthly Due</th><th>Prev. Bal.</th><th>Total Due</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+          <tbody id="reportMaintBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h2>💸 Expense Details</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Category</th><th>Description</th><th>Amount (₹)</th></tr></thead>
+          <tbody id="reportExpBody"></tbody>
+          <tfoot id="reportExpFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-outline" onclick="window.print()">🖨️ Print</button>
+      <button class="btn btn-outline" onclick="exportCSV()">📥 Export CSV</button>
+      <button class="btn btn-success" onclick="exportExcel()">📊 Export Excel (Professional)</button>
+      <button class="btn btn-primary" onclick="exportPDF()">📄 Export PDF (Professional)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DATA CORRECTION ══ -->
+<div id="tab-correction" class="tab">
+  <div class="alert alert-danger">
+    🛠️ <div><strong>Data Correction Tool</strong><br>
+    Use this tab if you accidentally entered data in the wrong month. Select any month to view what data was recorded, then clear maintenance payments, expenses, or all data for that month. You can then re-enter the data in the correct month.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📅 All Months — Data Overview</h2>
+    <div class="correction-month-grid" id="correctionMonthGrid"></div>
+  </div>
+
+  <div class="card">
+    <h2>🗂️ Select Month to Inspect & Correct</h2>
+    <div class="form-row" style="align-items:flex-end;">
+      <div class="form-group">
+        <label>Month</label>
+        <select id="correctionMonthSelect" onchange="renderCorrectionDetail()"></select>
+      </div>
+      <div>
+        <button class="btn btn-warn btn-sm" onclick="clearCorrectionMaintDirect()">🗑️ Clear Maintenance</button>
+        &nbsp;
+        <button class="btn btn-warn btn-sm" onclick="clearCorrectionExpDirect()">🗑️ Clear Expenses</button>
+        &nbsp;
+        <button class="btn btn-danger btn-sm" onclick="clearCorrectionAllDirect()">🗑️ Clear ALL</button>
+      </div>
+    </div>
+    <div id="correctionDetail" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div id="tab-settings" class="tab">
+  <div class="card">
+    <h2>🏢 Society Info</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Society Name</label><input type="text" id="settSociety" placeholder="e.g. ATS Government Quarters"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+  </div>
+  <div class="card">
+    <h2>📅 Working Year</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Year</label>
+        <select id="settYear" onchange="changeYear()">
+          <option value="2024">2024</option><option value="2025" selected>2025</option>
+          <option value="2026">2026</option><option value="2027">2027</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>💰 Bulk Update Monthly Due (All Members)</h2>
+    <div class="alert alert-warn" style="font-size:11px;">⚠️ This will update the monthly due for ALL members. For individual changes, use the 💰 button in the Members tab.</div>
+    <div class="form-row">
+      <div class="form-group"><label>New Monthly Due for All (₹)</label><input type="number" id="bulkDue" placeholder="e.g. 2500"></div>
+    </div>
+    <button class="btn btn-warn" onclick="bulkUpdateDue()">Update All</button>
+    <div id="bulkDueStatus" style="margin-top:8px;font-size:12px;color:var(--accent2);"></div>
+  </div>
+  <div class="card">
+    <h2>🔄 Transfer History</h2>
+    <div class="tbl-wrap">
+      <table><thead><tr><th>Room</th><th>Old Name</th><th>New Name</th><th>Date</th><th>Note</th></tr></thead>
+      <tbody id="transferLog"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📱 Install as App</h2>
+    <div class="alert alert-teal" style="margin-bottom:12px;">
+      Install this tool as a native-like app on your Android/iPhone. Works fully offline, saves data locally, opens from home screen.
+    </div>
+    <button class="btn btn-primary" onclick="installApp()" style="margin-right:8px;">📲 Install on This Device</button>
+    <p style="font-size:11px;color:var(--muted);margin-top:10px;">
+      If button doesn't work: tap browser menu (⋮) → <strong>Add to Home Screen</strong> or <strong>Install App</strong>
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>🔒 Storage Protection</h2>
+    <div id="storageStatusBox"><p style="color:var(--muted);font-size:12px;">Checking storage status...</p></div>
+  </div>
+
+  <div class="card">
+    <h2>💾 Auto-Backup to Device File</h2>
+    <div class="alert alert-teal" style="font-size:11px;margin-bottom:10px;">
+      📁 Save data directly to a file on your phone's storage (Downloads folder). This file is <strong>completely safe</strong> from Chrome's Clear Data — it's a real file on your device.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-success" onclick="saveToDeviceFile()">💾 Save to Device File</button>
+      <button class="btn btn-outline" onclick="loadFromDeviceFile()">📂 Load from Device File</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">
+      File is saved as <strong>SocietyData.json</strong> in your chosen folder. Restore anytime with "Load from Device File".
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>⚠️ Data Management</h2>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:10px;">Data stored in IndexedDB + localStorage (dual layer).</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="exportAllData()">📤 Export JSON Backup</button>
+      <button class="btn btn-outline" onclick="importData()">📥 Import Data</button>
+      <button class="btn btn-danger" onclick="clearAll()">🗑️ Clear All Data</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="doImport(event)">
+  </div>
+</div>
+
+</main>
+<!-- ══ PWA INSTALL BANNER ══ -->
+<div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:10000;
+  background:linear-gradient(135deg,#1B3A6B,#2563EB);color:#fff;
+  padding:14px 18px;align-items:center;gap:12px;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.5);">
+  <div style="font-size:28px;flex-shrink:0;">📱</div>
+  <div style="flex:1;">
+    <div style="font-weight:700;font-size:14px;">Install Society Manager App</div>
+    <div style="font-size:11px;opacity:0.85;margin-top:2px;">Works offline · Saves data on device · No internet needed</div>
+  </div>
+  <button onclick="installApp()" style="background:#34d6a0;color:#0a1a14;border:none;
+    padding:9px 18px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;">
+    Install App
+  </button>
+  <button onclick="dismissInstallBanner()" style="background:rgba(255,255,255,0.15);color:#fff;
+    border:none;padding:9px 12px;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0;">
+    ✕
+  </button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  MASTER DATA — 36 MEMBERS (Marathi names preserved)
+// ══════════════════════════════════════════════════════════════
+const MASTER_MEMBERS = [
+  {flatNo:'101',ownerName:'दिग्विजय आबासो मेटकरी',monthlyDue:2000},
+  {flatNo:'102',ownerName:'प्रविण रामदास कुंभार',monthlyDue:2000},
+  {flatNo:'103',ownerName:'संभाजी नाना थोरात',monthlyDue:2000},
+  {flatNo:'104',ownerName:'स्वप्निल भगवान दळवी',monthlyDue:2000},
+  {flatNo:'201',ownerName:'प्रसाद गुलाब यादव',monthlyDue:2000},
+  {flatNo:'202',ownerName:'सुधीर प्रकाश पिलाणे',monthlyDue:2000},
+  {flatNo:'203',ownerName:'ज्ञानेश्वर रामभाऊ शिंदे',monthlyDue:2000},
+  {flatNo:'204',ownerName:'चेतन चरण पचेरवाल',monthlyDue:2000},
+  {flatNo:'301',ownerName:'भाऊसाहेब बबन मोरे',monthlyDue:2000},
+  {flatNo:'302',ownerName:'संदीप अरविंद लालवंडे',monthlyDue:2000},
+  {flatNo:'303',ownerName:'सचिन मारुती गोंड',monthlyDue:2000},
+  {flatNo:'304',ownerName:'विष्णुपंत भगवान तिडके',monthlyDue:2000},
+  {flatNo:'401',ownerName:'सुशिल निळकंठ सांवत',monthlyDue:2000},
+  {flatNo:'402',ownerName:'अनिल नामदेव कासुर्डे',monthlyDue:2000},
+  {flatNo:'403',ownerName:'किरण मारुती बांदल',monthlyDue:2000},
+  {flatNo:'404',ownerName:'शरद उत्तम रोकडे',monthlyDue:2000},
+  {flatNo:'501',ownerName:'राजेंद्र रामचंद्र जगदाळे',monthlyDue:2000},
+  {flatNo:'502',ownerName:'ईश्वर कुंडलिक रायकर',monthlyDue:2000},
+  {flatNo:'503',ownerName:'चैतन मधुकर बाड',monthlyDue:2000},
+  {flatNo:'504',ownerName:'जॉन डेविड त्रिभुवन',monthlyDue:2000},
+  {flatNo:'601',ownerName:'रमेश गोविंद देसाई',monthlyDue:2000},
+  {flatNo:'602',ownerName:'अनिल दशरथ केळुसकर',monthlyDue:2000},
+  {flatNo:'603',ownerName:'किशोर परशराम खांडवी',monthlyDue:2000},
+  {flatNo:'604',ownerName:'रमेश दादु डावरे',monthlyDue:2000},
+  {flatNo:'701',ownerName:'रोहिदास धोंडीराम दुधाणे',monthlyDue:2000},
+  {flatNo:'702',ownerName:'सुनिल नारायण शिंदे',monthlyDue:2000},
+  {flatNo:'703',ownerName:'राजेश माणिक सुर्यवंशी',monthlyDue:2000},
+  {flatNo:'704',ownerName:'आसिफ आदम मुलाणी',monthlyDue:2000},
+  {flatNo:'801',ownerName:'किर्ती कृष्णाजी वाल्हेकर',monthlyDue:2000},
+  {flatNo:'802',ownerName:'संकेत रघुनाथ घाडगे',monthlyDue:2000},
+  {flatNo:'803',ownerName:'दिलीप भानु नाचणेकर',monthlyDue:2000},
+  {flatNo:'804',ownerName:'संदीप भिवसन सरदार',monthlyDue:2000},
+  {flatNo:'901',ownerName:'अमोल दादाभाऊ कोळेकर',monthlyDue:2000},
+  {flatNo:'902',ownerName:'प्रशांत सुरेश शेलार',monthlyDue:2000},
+  {flatNo:'903',ownerName:'हनुमंत मारुती जाधव',monthlyDue:2000},
+  {flatNo:'904',ownerName:'विकास रमेश चव्हाण',monthlyDue:2000},
+];
+
+const MONTHS    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const EXP_COLORS= ['#4f8ef7','#34d6a0','#f7934f','#f74f6a','#a78bfa','#f7d34f','#50c8f5'];
+
+// ══════════════════════════════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  STORAGE LAYER v2 — IndexedDB (primary) + localStorage (fallback)
+//  IndexedDB survives Chrome's "Clear Browsing Data" when
+//  Persistent Storage permission is granted.
+// ══════════════════════════════════════════════════════════════
+
+const DB_NAME    = 'SocietyManagerDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'appData';
+let   _db        = null;           // holds open IDB connection
+let   _idbReady  = false;
+let   _idbQueue  = [];             // queued writes before DB opens
+
+// Open IndexedDB
+function openDB(){
+  return new Promise((resolve, reject)=>{
+    if(_db){ resolve(_db); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORE_NAME))
+        db.createObjectStore(STORE_NAME);
+    };
+    req.onsuccess = e => {
+      _db = e.target.result;
+      _idbReady = true;
+      resolve(_db);
+    };
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+// IDB get — async
+function idbGet(key){
+  return openDB().then(db => new Promise((resolve, reject)=>{
+    const tx  = db.transaction(STORE_NAME,'readonly');
+    const req = tx.objectStore(STORE_NAME).get(key);
+    req.onsuccess = e => resolve(e.target.result ?? null);
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+// IDB set — async
+function idbSet(key, value){
+  return openDB().then(db => new Promise((resolve, reject)=>{
+    const tx  = db.transaction(STORE_NAME,'readwrite');
+    const req = tx.objectStore(STORE_NAME).put(value, key);
+    req.onsuccess = ()=> resolve(true);
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+// IDB delete
+function idbDel(key){
+  return openDB().then(db => new Promise((resolve, reject)=>{
+    const tx  = db.transaction(STORE_NAME,'readwrite');
+    const req = tx.objectStore(STORE_NAME).delete(key);
+    req.onsuccess = ()=> resolve(true);
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+// IDB get all keys
+function idbGetAllKeys(){
+  return openDB().then(db => new Promise((resolve, reject)=>{
+    const tx  = db.transaction(STORE_NAME,'readonly');
+    const req = tx.objectStore(STORE_NAME).getAllKeys();
+    req.onsuccess = e => resolve(e.target.result || []);
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+// In-memory cache — keeps everything fast after first load
+const _memCache = {};
+
+// SYNC read from memory cache (populated on startup from IDB)
+// Falls back to localStorage if IDB not yet ready
+const G = (k, d) => {
+  if(k in _memCache) return _memCache[k];
+  // localStorage fallback
+  try { const v = localStorage.getItem(k); if(v!==null){ const p=JSON.parse(v); _memCache[k]=p; return p; } }
+  catch(e){}
+  return d;
+};
+
+// SYNC write — writes to memory + localStorage immediately,
+// also fires async IDB write in background
+const S = (k, v) => {
+  _memCache[k] = v;
+  // localStorage — immediate
+  try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){}
+  // IndexedDB — async background write
+  idbSet(k, v).catch(e => console.warn('[IDB] write failed:', k, e));
+};
+
+// Load all data from IDB into memory cache on startup
+async function loadFromIDB(){
+  try {
+    const keys = await idbGetAllKeys();
+    const socKeys = keys.filter(k => String(k).startsWith('soc_'));
+    await Promise.all(socKeys.map(async k => {
+      const v = await idbGet(k);
+      if(v !== null){
+        _memCache[k] = v;
+        // Keep localStorage in sync
+        try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){}
+      }
+    }));
+    // Also load any localStorage keys not in IDB (migration)
+    Object.keys(localStorage).filter(k=>k.startsWith('soc_')).forEach(k=>{
+      if(!(k in _memCache)){
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          _memCache[k] = v;
+          idbSet(k, v).catch(()=>{});  // migrate to IDB
+        } catch(e){}
+      }
+    });
+    console.log(`[Storage] Loaded ${socKeys.length} keys from IndexedDB`);
+  } catch(e){
+    console.warn('[Storage] IDB load failed, using localStorage only:', e);
+  }
+}
+
+// Request persistent storage — protects IDB from being cleared
+async function requestPersistentStorage(){
+  if(!navigator.storage || !navigator.storage.persist) return false;
+  try {
+    const persisted = await navigator.storage.persisted();
+    if(persisted){
+      console.log('[Storage] Already persistent ✅');
+      return true;
+    }
+    const granted = await navigator.storage.persist();
+    if(granted){
+      console.log('[Storage] Persistent storage granted ✅');
+      return true;
+    }
+    console.warn('[Storage] Persistent storage denied — data may be evicted');
+    return false;
+  } catch(e){ return false; }
+}
+
+// Show storage status in settings
+async function showStorageStatus(){
+  const el = document.getElementById('storageStatusBox');
+  if(!el) return;
+  try {
+    const persisted = navigator.storage?.persisted ? await navigator.storage.persisted() : false;
+    const estimate = navigator.storage?.estimate ? await navigator.storage.estimate() : null;
+    const usedMB   = estimate ? (estimate.usage/1024/1024).toFixed(2) : '?';
+    const quotaMB  = estimate ? (estimate.quota/1024/1024).toFixed(0) : '?';
+    const idbKeys  = await idbGetAllKeys();
+    const socKeys  = idbKeys.filter(k=>String(k).startsWith('soc_'));
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="stat-box ${persisted?'green':'orange'}" style="padding:10px;">
+          <div class="lbl">Storage Protection</div>
+          <div style="font-size:13px;font-weight:700;color:${persisted?'var(--accent2)':'var(--warn)'};">
+            ${persisted?'✅ Protected':'⚠️ Not Protected'}
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px;">
+            ${persisted?'Data safe from Chrome clear':'Tap button below to protect'}
+          </div>
+        </div>
+        <div class="stat-box blue" style="padding:10px;">
+          <div class="lbl">Storage Used</div>
+          <div style="font-size:13px;font-weight:700;color:var(--accent);">${usedMB} MB</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px;">of ${quotaMB} MB quota · ${socKeys.length} records</div>
+        </div>
+      </div>
+      ${!persisted?`<button class="btn btn-success" style="margin-top:10px;width:100%;" onclick="grantPersistentStorage()">
+        🔒 Grant Persistent Storage Protection
+      </button>`:''}
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">
+        📦 Data stored in: IndexedDB (primary) + localStorage (backup)
+      </div>`;
+  } catch(e){
+    el.innerHTML = '<p style="color:var(--muted);font-size:12px;">Storage info unavailable</p>';
+  }
+}
+
+async function grantPersistentStorage(){
+  const granted = await requestPersistentStorage();
+  if(granted){
+    toast('✅ Storage protected! Data will NOT be cleared with browser data.');
+  } else {
+    toast('⚠️ Permission denied. Try from installed PWA home screen app.');
+  }
+  showStorageStatus();
+}
+const getOwners     =()=>G('soc_owners',[]);
+const setOwners     =v=>S('soc_owners',v);
+const getMaint      =ym=>G('soc_maint_'+ym,{});
+const setMaint      =(ym,v)=>S('soc_maint_'+ym,v);
+const getExp        =ym=>G('soc_exp_'+ym,[]);
+const setExp        =(ym,v)=>S('soc_exp_'+ym,v);
+const getSettings   =()=>G('soc_settings',{societyName:'Government Officers Quarters',year:2025});
+const setSettings   =v=>S('soc_settings',v);
+const getTransferLog=()=>G('soc_transfers',[]);
+const setTransferLog=v=>S('soc_transfers',v);
+const getPrevBal    =()=>G('soc_prevbal',{});
+const setPrevBal    =v=>S('soc_prevbal',v);
+const getOpeningBal =()=>G('soc_openingbal',{ym:'',amount:0,note:''});
+const setOpeningBal =v=>S('soc_openingbal',v);
+const getDueLog     =()=>G('soc_duelog',[]);
+const setDueLog     =v=>S('soc_duelog',v);
+
+const curMonth=()=>document.getElementById('globalMonth').value;
+const monthLbl=ym=>{const[y,m]=ym.split('-');return MONTHS[parseInt(m)-1]+' '+y;};
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+window.onload = async function(){
+  // Step 1: Request persistent storage immediately on load
+  requestPersistentStorage();
+
+  // Step 2: Load all data from IndexedDB into memory cache
+  await loadFromIDB();
+
+  // Step 3: Normal init
+  const s=getSettings();
+  document.getElementById('societySubtitle').textContent=s.societyName;
+  document.getElementById('settSociety').value=s.societyName;
+  document.getElementById('settYear').value=s.year;
+  buildMonthOptions(s.year);
+  const now=new Date();
+  const nowYM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const sel=document.getElementById('globalMonth');
+  if([...sel.options].some(o=>o.value===nowYM)) sel.value=nowYM;
+  if(getOwners().length===0){
+    setOwners(JSON.parse(JSON.stringify(MASTER_MEMBERS)));
+    toast('✅ 36 members loaded!');
+  }
+  refreshAll();
+
+  // Step 4: Show storage status in settings
+  showStorageStatus();
+};
+
+function buildMonthOptions(year){
+  const sel=document.getElementById('globalMonth');
+  const openSel=document.getElementById('openingMonth');
+  const corrSel=document.getElementById('correctionMonthSelect');
+  const cur=sel.value;
+  sel.innerHTML=''; openSel.innerHTML=''; corrSel.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const ym=year+'-'+String(m).padStart(2,'0');
+    const lbl=MONTHS[m-1]+' '+year;
+    sel.innerHTML+=`<option value="${ym}">${lbl}</option>`;
+    openSel.innerHTML+=`<option value="${ym}">${lbl}</option>`;
+    corrSel.innerHTML+=`<option value="${ym}">${lbl}</option>`;
+  }
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  loadOpeningBalDisplay();
+}
+
+function onMonthChange(){refreshAll();}
+
+let reportMonth='';
+function refreshAll(){
+  reportMonth=curMonth();
+  renderDashboard();
+  renderOwners();
+  renderMaintenance();
+  renderExpenses();
+  renderPrevBal();
+  renderReports();
+  renderTransferLog();
+  renderCorrectionMonthGrid();
+  renderCorrectionDetail();
+  loadOpeningBalDisplay();
+}
+
+function showTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='reports'){reportMonth=curMonth();renderReports();}
+  if(name==='correction'){renderCorrectionMonthGrid();renderCorrectionDetail();}
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CALCULATIONS
+// ══════════════════════════════════════════════════════════════
+function getPrevBalForFlat(flat){return getPrevBal()[flat]?.amount||0;}
+
+function calcMaintStats(ym){
+  const owners=getOwners(),maint=getMaint(ym),pb=getPrevBal();
+  let totalDue=0,totalPrevBal=0,totalPaid=0;
+  owners.forEach(o=>{
+    totalDue+=o.monthlyDue||0;
+    totalPrevBal+=Math.max(0,pb[o.flatNo]?.amount||0);
+    totalPaid+=maint[o.flatNo]||0;
+  });
+  return{totalDue,totalPrevBal,totalRequired:totalDue+totalPrevBal,totalPaid,
+         totalPending:Math.max(0,totalDue+totalPrevBal-totalPaid)};
+}
+function calcExpStats(ym){return getExp(ym).reduce((s,e)=>s+(e.amount||0),0);}
+
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD + CHARTS
+// ══════════════════════════════════════════════════════════════
+const CHART_COLORS = ['#4f8ef7','#34d6a0','#f7934f','#f74f6a','#a78bfa','#38bdf8','#f7d34f','#50c8f5','#fb7185','#4ade80'];
+
+function drawDonut(canvasId, segments, centerLabel, centerValue){
+  const canvas=document.getElementById(canvasId); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2-10, inner=R*0.55;
+  ctx.clearRect(0,0,W,H);
+  const total=segments.reduce((s,sg)=>s+sg.value,0);
+  if(total===0){
+    ctx.fillStyle='#2a3147'; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#7a82a0'; ctx.font='bold 11px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('No Data',cx,cy); return;
+  }
+  let angle=-Math.PI/2;
+  segments.forEach(sg=>{
+    const sweep=(sg.value/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,angle,angle+sweep);
+    ctx.closePath(); ctx.fillStyle=sg.color; ctx.fill();
+    ctx.strokeStyle='#0f1117'; ctx.lineWidth=2; ctx.stroke();
+    angle+=sweep;
+  });
+  // Hole
+  ctx.beginPath(); ctx.arc(cx,cy,inner,0,Math.PI*2);
+  ctx.fillStyle='#181c27'; ctx.fill();
+  // Center text
+  ctx.fillStyle='#e8eaf2'; ctx.font='bold 13px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(centerValue,cx,cy-7);
+  ctx.fillStyle='#7a82a0'; ctx.font='10px Arial';
+  ctx.fillText(centerLabel,cx,cy+9);
+}
+
+function drawPie(canvasId, segments){
+  const canvas=document.getElementById(canvasId); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2-10;
+  ctx.clearRect(0,0,W,H);
+  const total=segments.reduce((s,sg)=>s+sg.value,0);
+  if(total===0){
+    ctx.fillStyle='#2a3147'; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#7a82a0'; ctx.font='bold 11px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('No Data',cx,cy); return;
+  }
+  let angle=-Math.PI/2;
+  segments.forEach(sg=>{
+    const sweep=(sg.value/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,angle,angle+sweep);
+    ctx.closePath(); ctx.fillStyle=sg.color; ctx.fill();
+    ctx.strokeStyle='#0f1117'; ctx.lineWidth=2; ctx.stroke();
+    angle+=sweep;
+  });
+}
+
+function drawBar(canvasId, labels, datasets, title){
+  const canvas=document.getElementById(canvasId); if(!canvas) return;
+  // Resize to actual CSS width
+  canvas.width = canvas.offsetWidth||280;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const PAD={top:20,right:10,bottom:40,left:52};
+  const cW=W-PAD.left-PAD.right, cH=H-PAD.top-PAD.bottom;
+  ctx.clearRect(0,0,W,H);
+  const allVals=datasets.flatMap(ds=>ds.data);
+  const maxV=Math.max(...allVals,1);
+  const n=labels.length, bw=Math.floor(cW/n), grp=datasets.length, gb=Math.floor(bw*0.7/grp);
+  // Grid lines
+  ctx.strokeStyle='#2a3147'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=PAD.top+cH-(i/4)*cH;
+    ctx.beginPath(); ctx.moveTo(PAD.left,y); ctx.lineTo(PAD.left+cW,y); ctx.stroke();
+    ctx.fillStyle='#7a82a0'; ctx.font='9px Arial'; ctx.textAlign='right';
+    ctx.fillText('₹'+Math.round(maxV*i/4/1000)+'k',PAD.left-4,y+3);
+  }
+  // Bars
+  labels.forEach((lbl,i)=>{
+    const x0=PAD.left+i*bw+(bw-grp*gb)/2;
+    datasets.forEach((ds,di)=>{
+      const val=ds.data[i]||0;
+      const bh=Math.max(2,(val/maxV)*cH);
+      const x=x0+di*gb, y=PAD.top+cH-bh;
+      ctx.fillStyle=ds.color;
+      ctx.beginPath(); ctx.roundRect(x,y,gb-1,bh,2); ctx.fill();
+    });
+    ctx.fillStyle='#7a82a0'; ctx.font='8px Arial'; ctx.textAlign='center';
+    ctx.fillText(lbl.slice(0,3),PAD.left+i*bw+bw/2,PAD.top+cH+12);
+  });
+}
+
+function drawCompareBar(canvasId, labels, data1, data2, col1, col2){
+  const canvas=document.getElementById(canvasId); if(!canvas) return;
+  canvas.width = canvas.offsetWidth||320;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const PAD={top:16,right:8,bottom:36,left:52};
+  const cW=W-PAD.left-PAD.right, cH=H-PAD.top-PAD.bottom;
+  ctx.clearRect(0,0,W,H);
+  const maxV=Math.max(...data1,...data2,1);
+  const n=labels.length, bw=Math.floor(cW/n), gb=Math.floor(bw*0.35);
+  for(let i=0;i<=4;i++){
+    const y=PAD.top+cH-(i/4)*cH;
+    ctx.strokeStyle='#2a3147'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD.left,y); ctx.lineTo(PAD.left+cW,y); ctx.stroke();
+    ctx.fillStyle='#7a82a0'; ctx.font='8px Arial'; ctx.textAlign='right';
+    ctx.fillText('₹'+Math.round(maxV*i/4/1000)+'k',PAD.left-3,y+3);
+  }
+  labels.forEach((lbl,i)=>{
+    const x0=PAD.left+i*bw+(bw-gb*2-2)/2;
+    [[data1[i],col1],[data2[i],col2]].forEach(([val,col],di)=>{
+      const bh=Math.max(2,((val||0)/maxV)*cH);
+      ctx.fillStyle=col;
+      ctx.beginPath(); ctx.roundRect(x0+di*(gb+2),PAD.top+cH-bh,gb,bh,2); ctx.fill();
+    });
+    ctx.fillStyle='#7a82a0'; ctx.font='8px Arial'; ctx.textAlign='center';
+    ctx.fillText(lbl.slice(0,3),PAD.left+i*bw+bw/2,PAD.top+cH+12);
+  });
+  // Legend
+  ctx.fillStyle=col1; ctx.fillRect(PAD.left,PAD.top+cH+22,10,8);
+  ctx.fillStyle='#e8eaf2'; ctx.font='9px Arial'; ctx.textAlign='left';
+  ctx.fillText('Collected',PAD.left+13,PAD.top+cH+29);
+  ctx.fillStyle=col2; ctx.fillRect(PAD.left+80,PAD.top+cH+22,10,8);
+  ctx.fillText('Expenses',PAD.left+93,PAD.top+cH+29);
+}
+
+function renderDashboard(){
+  const ym=curMonth(),ms=calcMaintStats(ym),totalExp=calcExpStats(ym);
+  const ob=getOpeningBal();
+  const balance=(ob.amount||0)+ms.totalPaid-totalExp;
+  const owners=getOwners(),maint=getMaint(ym);
+  const paidCount=owners.filter(o=>{
+    const due=(o.monthlyDue||0)+Math.max(0,getPrevBalForFlat(o.flatNo));
+    return due>0&&(maint[o.flatNo]||0)>=due;
+  }).length;
+  const partCount=owners.filter(o=>{
+    const due=(o.monthlyDue||0)+Math.max(0,getPrevBalForFlat(o.flatNo));
+    const p=maint[o.flatNo]||0; return p>0&&p<due;
+  }).length;
+  const unpaidCount=owners.filter(o=>(maint[o.flatNo]||0)===0).length;
+
+  document.getElementById('dashStats').innerHTML=`
+    <div class="stat-box blue"><div class="lbl">Monthly Due (${monthLbl(ym)})</div><div class="val">₹${fmt(ms.totalDue)}</div></div>
+    <div class="stat-box orange"><div class="lbl">Prev. Arrears</div><div class="val">₹${fmt(ms.totalPrevBal)}</div></div>
+    <div class="stat-box blue"><div class="lbl">Total Due</div><div class="val">₹${fmt(ms.totalRequired)}</div></div>
+    <div class="stat-box green"><div class="lbl">Collected</div><div class="val">₹${fmt(ms.totalPaid)}</div></div>
+    <div class="stat-box red"><div class="lbl">Pending</div><div class="val">₹${fmt(ms.totalPending)}</div></div>
+    <div class="stat-box blue"><div class="lbl">Total Expenses</div><div class="val">₹${fmt(totalExp)}</div></div>
+    <div class="stat-box ${balance>=0?'green':'red'}"><div class="lbl">Fund Balance</div><div class="val">₹${fmt(Math.abs(balance))} ${balance>=0?'▲':'▼'}</div></div>
+    <div class="stat-box purple"><div class="lbl">Flats Paid</div><div class="val">${paidCount}/${owners.length}</div></div>`;
+
+  // ── DONUT: Collection Status ─────────────────────────────
+  const paidAmt  = owners.filter(o=>{const d=(o.monthlyDue||0)+Math.max(0,getPrevBalForFlat(o.flatNo));return d>0&&(maint[o.flatNo]||0)>=d;}).reduce((s,o)=>s+(maint[o.flatNo]||0),0);
+  const partAmt  = owners.filter(o=>{const d=(o.monthlyDue||0)+Math.max(0,getPrevBalForFlat(o.flatNo));const p=maint[o.flatNo]||0;return p>0&&p<d;}).reduce((s,o)=>s+(maint[o.flatNo]||0),0);
+  setTimeout(()=>{
+    drawDonut('chartDonut',[
+      {label:'Paid',value:paidCount,color:'#34d6a0'},
+      {label:'Partial',value:partCount,color:'#f7934f'},
+      {label:'Unpaid',value:unpaidCount,color:'#f74f6a'},
+    ],'Flats',`${paidCount}/${owners.length}`);
+    document.getElementById('chartDonutLegend').innerHTML=`
+      <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#34d6a0;display:inline-block;"></span><span style="color:var(--muted)">Paid (${paidCount})</span></span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#f7934f;display:inline-block;"></span><span style="color:var(--muted)">Partial (${partCount})</span></span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#f74f6a;display:inline-block;"></span><span style="color:var(--muted)">Unpaid (${unpaidCount})</span></span>
+      </div>`;
+
+    // ── PIE: Expense Breakdown ──────────────────────────────
+    const exps=getExp(ym),bycat={};
+    exps.forEach(e=>{bycat[e.category]=(bycat[e.category]||0)+e.amount;});
+    const expSegs=Object.entries(bycat).sort((a,b)=>b[1]-a[1])
+      .map(([cat,amt],i)=>({label:cat,value:amt,color:CHART_COLORS[i%CHART_COLORS.length]}));
+    drawPie('chartExpPie',expSegs);
+    document.getElementById('chartExpLegend').innerHTML=expSegs.length
+      ?`<div style="display:flex;flex-direction:column;gap:4px;">${expSegs.map(sg=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span style="width:10px;height:10px;border-radius:2px;background:${sg.color};display:inline-block;flex-shrink:0;"></span>
+              <span style="color:var(--muted);font-size:10px;">${sg.label}</span>
+            </div>
+            <span style="color:var(--text);font-size:10px;font-weight:600;">₹${fmt(sg.value)}</span>
+          </div>`).join('')}</div>`
+      :`<p style="color:var(--muted);font-size:11px;text-align:center;">No expenses yet.</p>`;
+
+    // ── BAR: Monthly Trend ──────────────────────────────────
+    const s=getSettings(); const yr=s.year;
+    const barLabels=[], barCollected=[], barExpenses=[], barPending=[];
+    for(let m=1;m<=12;m++){
+      const mym=yr+'-'+String(m).padStart(2,'0');
+      barLabels.push(MONTHS[m-1]);
+      const ms2=calcMaintStats(mym), exp2=calcExpStats(mym);
+      barCollected.push(ms2.totalPaid);
+      barExpenses.push(exp2);
+      barPending.push(ms2.totalPending);
+    }
+    drawBar('chartBar',barLabels,[
+      {data:barCollected,color:'#34d6a0'},
+      {data:barPending,color:'#f74f6a'},
+    ]);
+
+    // ── Compare: Collected vs Expenses ─────────────────────
+    drawCompareBar('chartCompare',barLabels,barCollected,barExpenses,'#34d6a0','#f7934f');
+  },50);
+
+  // ── Defaulters ───────────────────────────────────────────
+  const def=owners.filter(o=>{
+    const due=(o.monthlyDue||0)+Math.max(0,getPrevBalForFlat(o.flatNo));
+    return (maint[o.flatNo]||0)<due;
+  });
+  document.getElementById('defaulterList').innerHTML=def.length
+    ?`<div class="tbl-wrap"><table><thead><tr><th>Room</th><th>Member</th><th>Due</th></tr></thead><tbody>
+      ${def.map(o=>{const due=(o.monthlyDue||0)+Math.max(0,getPrevBalForFlat(o.flatNo));
+      return`<tr><td>${o.flatNo}</td><td class="mr" style="font-size:11px">${o.ownerName}</td>
+      <td><span class="badge badge-red">₹${fmt(due-(maint[o.flatNo]||0))}</span></td></tr>`;}).join('')}
+      </tbody></table></div>`
+    :`<div class="alert alert-success">✅ All members paid in full this month!</div>`;
+
+  // ── Yearly Overview Table ────────────────────────────────
+  const s=getSettings();const yr=s.year;let rows='';
+  for(let m=1;m<=12;m++){
+    const mym=yr+'-'+String(m).padStart(2,'0');
+    const ms2=calcMaintStats(mym),exp2=calcExpStats(mym),bal2=ms2.totalPaid-exp2;
+    const hasMaint=Object.keys(getMaint(mym)).length>0;
+    const hasExp=getExp(mym).length>0;
+    rows+=`<tr>
+      <td>${MONTHS[m-1]} ${yr}</td>
+      <td>₹${fmt(ms2.totalDue)}</td><td>₹${fmt(ms2.totalPrevBal)}</td>
+      <td>₹${fmt(ms2.totalPaid)}</td><td>₹${fmt(ms2.totalPending)}</td><td>₹${fmt(exp2)}</td>
+      <td><span class="badge ${bal2>=0?'badge-green':'badge-red'}">₹${fmt(Math.abs(bal2))} ${bal2>=0?'▲':'▼'}</span></td>
+      <td>${hasMaint?'<span class="badge badge-green">✓</span>':'<span style="color:var(--muted)">—</span>'}
+          ${hasExp?'<span class="badge badge-blue">Exp</span>':''}</td>
+    </tr>`;
+  }
+  document.getElementById('yearlyOverview').innerHTML=`<table><thead><tr>
+    <th>Month</th><th>Monthly Due</th><th>Prev. Bal.</th><th>Collected</th><th>Pending</th><th>Expenses</th><th>Balance</th><th>Data</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+// ══════════════════════════════════════════════════════════════
+//  OWNERS
+// ══════════════════════════════════════════════════════════════
+function addOwner(){
+  const flat=document.getElementById('newFlat').value.trim();
+  const name=document.getElementById('newOwner').value.trim();
+  const due=parseFloat(document.getElementById('newMaintAmt').value)||2000;
+  if(!flat||!name){toast('Room No. and Name required');return;}
+  const owners=getOwners();
+  if(owners.find(o=>o.flatNo===flat)){toast('Room already registered!');return;}
+  owners.push({flatNo:flat,ownerName:name,monthlyDue:due});
+  owners.sort((a,b)=>parseInt(a.flatNo)-parseInt(b.flatNo));
+  setOwners(owners);
+  document.getElementById('newFlat').value='';
+  document.getElementById('newOwner').value='';
+  document.getElementById('newMaintAmt').value='';
+  renderOwners();renderMaintenance();renderDashboard();
+  toast('Member added!');
+}
+
+function renderOwners(){
+  const owners=getOwners();
+  const q=(document.getElementById('ownerSearch')?.value||'').toLowerCase();
+  const filtered=q?owners.filter(o=>o.flatNo.toLowerCase().includes(q)||o.ownerName.toLowerCase().includes(q)):owners;
+  document.getElementById('ownerCount').textContent=owners.length;
+  document.getElementById('ownerGrid').innerHTML=filtered.length
+    ?filtered.map(o=>{
+      const pb=getPrevBalForFlat(o.flatNo);
+      const pbTxt=pb!==0?` · <span style="color:${pb>0?'var(--warn)':'var(--teal)'}">${pb>0?'Arr':'Adv'}: ₹${fmt(Math.abs(pb))}</span>`:'';
+      return`<div class="owner-card">
+        <div class="owner-avatar">${o.ownerName.charAt(0)}</div>
+        <div class="owner-info">
+          <div class="flat">Room ${o.flatNo}</div>
+          <div class="name">${o.ownerName}</div>
+          <div class="due-badge">₹${fmt(o.monthlyDue||0)}/mo${pbTxt}</div>
+        </div>
+        <div class="owner-actions">
+          <button class="btn btn-teal btn-sm" title="Change Monthly Due" onclick="openDueModal('${o.flatNo}')">💰</button>
+          <button class="btn btn-purple btn-sm" title="Transfer" onclick="openTransferModal('${o.flatNo}')">🔄</button>
+        </div>
+      </div>`;}).join('')
+    :`<p style="color:var(--muted)">No members found.</p>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DUE MODAL
+// ══════════════════════════════════════════════════════════════
+function openDueModal(flat){
+  const o=getOwners().find(x=>x.flatNo===flat); if(!o) return;
+  document.getElementById('dueFlatNo').value=flat;
+  document.getElementById('dueFlatDisp').value='Room '+flat;
+  document.getElementById('dueOwnerName').value=o.ownerName;
+  document.getElementById('dueCurrent').value=o.monthlyDue||0;
+  document.getElementById('dueNew').value='';
+  document.getElementById('dueNote').value='';
+  document.getElementById('dueModal').classList.add('open');
+}
+function saveDueChange(){
+  const flat=document.getElementById('dueFlatNo').value;
+  const newDue=parseFloat(document.getElementById('dueNew').value);
+  const note=document.getElementById('dueNote').value.trim();
+  if(!newDue||newDue<=0){toast('Enter new amount');return;}
+  const owners=getOwners();
+  const idx=owners.findIndex(o=>o.flatNo===flat); if(idx===-1) return;
+  const oldDue=owners[idx].monthlyDue;
+  const log=getDueLog();
+  log.push({flat,oldDue,newDue,note,date:new Date().toLocaleDateString('en-IN')});
+  setDueLog(log);
+  owners[idx].monthlyDue=newDue;
+  setOwners(owners);
+  closeModal('dueModal');
+  refreshAll();
+  toast(`Room ${flat}: Due ₹${fmt(oldDue)} → ₹${fmt(newDue)}`);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TRANSFER MODAL
+// ══════════════════════════════════════════════════════════════
+function openTransferModal(flat){
+  const o=getOwners().find(x=>x.flatNo===flat); if(!o) return;
+  document.getElementById('transferFlat').value=flat;
+  document.getElementById('transferFlatDisp').value='Room '+flat;
+  document.getElementById('transferOldName').value=o.ownerName;
+  document.getElementById('transferNewName').value='';
+  document.getElementById('transferNewDue').value='';
+  document.getElementById('transferNote').value='';
+  document.getElementById('transferDate').value=new Date().toISOString().split('T')[0];
+  const log=getTransferLog().filter(t=>t.flat===flat);
+  const h=document.getElementById('transferHistory');
+  h.innerHTML=log.length
+    ?'<strong>Transfer History:</strong><br>'+log.map(t=>`<p>📌 ${t.date}: ${t.oldName} → ${t.newName}${t.note?' ('+t.note+')':''}</p>`).join('')
+    :'<em>No transfer records for this room.</em>';
+  document.getElementById('transferModal').classList.add('open');
+}
+function doTransfer(){
+  const flat=document.getElementById('transferFlat').value;
+  const newName=document.getElementById('transferNewName').value.trim();
+  if(!newName){toast('New member name required');return;}
+  const newDue=parseFloat(document.getElementById('transferNewDue').value)||null;
+  const date=document.getElementById('transferDate').value;
+  const note=document.getElementById('transferNote').value.trim();
+  const owners=getOwners();
+  const idx=owners.findIndex(o=>o.flatNo===flat); if(idx===-1) return;
+  const oldName=owners[idx].ownerName;
+  const log=getTransferLog();
+  log.push({flat,oldName,newName,date:date||new Date().toLocaleDateString('en-IN'),note});
+  setTransferLog(log);
+  owners[idx].ownerName=newName;
+  if(newDue&&newDue>0) owners[idx].monthlyDue=newDue;
+  setOwners(owners);
+  closeModal('transferModal');
+  refreshAll();
+  toast(`Room ${flat}: Transfer saved!`);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MAINTENANCE — with checkbox auto-fill
+// ══════════════════════════════════════════════════════════════
+function renderMaintenance(){
+  const ym=curMonth();
+  document.getElementById('maintMonthLabel').textContent=monthLbl(ym);
+  const owners=getOwners(),maint=getMaint(ym),pb=getPrevBal();
+  let tDue=0,tPrev=0,tTotal=0,tPaid=0;
+
+  document.getElementById('maintBody').innerHTML=owners.map(o=>{
+    const monthly=o.monthlyDue||0;
+    const prev=pb[o.flatNo]?.amount||0;
+    const totalDue=monthly+Math.max(0,prev);
+    const paid=maint[o.flatNo]||0;
+    const remaining=Math.max(0,totalDue-paid);
+    tDue+=monthly; tPrev+=Math.max(0,prev); tTotal+=totalDue; tPaid+=paid;
+    const pct=totalDue>0?Math.min(100,Math.round(paid/totalDue*100)):0;
+    const isFullyPaid=paid>=totalDue&&totalDue>0;
+    const status=isFullyPaid?`<span class="badge badge-green">Paid</span>`
+      :paid>0?`<span class="badge badge-orange">Partial</span>`
+      :`<span class="badge badge-red">Unpaid</span>`;
+    const prevBadge=prev>0?`<span class="badge badge-orange">+₹${fmt(prev)}</span>`
+      :prev<0?`<span class="badge badge-teal">Adv ₹${fmt(Math.abs(prev))}</span>`
+      :`<span style="color:var(--muted);font-size:11px">—</span>`;
+    return`<tr id="row_${o.flatNo}" class="${isFullyPaid?'row-paid':''}">
+      <td><strong>${o.flatNo}</strong></td>
+      <td class="mr" style="font-size:11px;min-width:130px">${o.ownerName}</td>
+      <td><input type="number" class="due-input" id="due_${o.flatNo}" value="${monthly}"
+          onchange="updateDueInline('${o.flatNo}',this.value)"></td>
+      <td>${prevBadge}</td>
+      <td><strong id="totdue_${o.flatNo}">₹${fmt(totalDue)}</strong></td>
+      <td style="text-align:center;">
+        <input type="checkbox" id="chk_${o.flatNo}" ${isFullyPaid?'checked':''}
+          onchange="onCheckboxChange('${o.flatNo}')">
+      </td>
+      <td><input type="number" class="pay-input" id="pay_${o.flatNo}" value="${paid||''}" placeholder="0"
+          oninput="updatePayPreview('${o.flatNo}')"></td>
+      <td id="rem_${o.flatNo}"><span class="${remaining>0?'badge badge-red':'badge badge-green'}">₹${fmt(remaining)}</span></td>
+      <td id="stat_${o.flatNo}">${status}</td>
+      <td><div class="progress-wrap"><div class="progress-bar" id="prog_${o.flatNo}"
+          style="width:${pct}%;background:${pct>=100?'var(--accent2)':pct>0?'var(--warn)':'var(--danger)'}"></div></div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('maintFoot').innerHTML=`
+    <tr style="background:var(--surface2)">
+      <td colspan="2"><strong>TOTAL</strong></td>
+      <td><strong>₹${fmt(tDue)}</strong></td>
+      <td><strong>₹${fmt(tPrev)}</strong></td>
+      <td><strong>₹${fmt(tTotal)}</strong></td>
+      <td></td>
+      <td><strong>₹${fmt(tPaid)}</strong></td>
+      <td><strong>₹${fmt(Math.max(0,tTotal-tPaid))}</strong></td>
+      <td colspan="2"></td>
+    </tr>`;
+}
+
+// Checkbox ticked → auto-fill amount = total due
+function onCheckboxChange(flat){
+  const chk=document.getElementById('chk_'+flat);
+  const dueEl=document.getElementById('due_'+flat);
+  const monthly=parseFloat(dueEl?.value)||0;
+  const prev=getPrevBalForFlat(flat);
+  const totalDue=monthly+Math.max(0,prev);
+  const payEl=document.getElementById('pay_'+flat);
+  if(chk.checked){
+    payEl.value=totalDue;
+  } else {
+    payEl.value='';
+  }
+  updatePayPreview(flat);
+}
+
+function updateDueInline(flat,val){
+  const prev=getPrevBal()[flat]?.amount||0;
+  const newDue=parseFloat(val)||0;
+  const totalDue=newDue+Math.max(0,prev);
+  const totEl=document.getElementById('totdue_'+flat);
+  if(totEl) totEl.textContent='₹'+fmt(totalDue);
+  // If checkbox is checked, update pay amount too
+  const chk=document.getElementById('chk_'+flat);
+  if(chk?.checked){
+    const payEl=document.getElementById('pay_'+flat);
+    if(payEl) payEl.value=totalDue;
+  }
+  updatePayPreview(flat);
+}
+
+function updatePayPreview(flat){
+  const dueEl=document.getElementById('due_'+flat);
+  const monthly=parseFloat(dueEl?.value)||0;
+  const prev=getPrevBal()[flat]?.amount||0;
+  const totalDue=monthly+Math.max(0,prev);
+  const val=parseFloat(document.getElementById('pay_'+flat)?.value)||0;
+  const rem=Math.max(0,totalDue-val);
+  document.getElementById('rem_'+flat).innerHTML=`<span class="${rem>0?'badge badge-red':'badge badge-green'}">₹${fmt(rem)}</span>`;
+  const isFullPaid=val>=totalDue&&totalDue>0;
+  const s=isFullPaid?`<span class="badge badge-green">Paid</span>`:val>0?`<span class="badge badge-orange">Partial</span>`:`<span class="badge badge-red">Unpaid</span>`;
+  document.getElementById('stat_'+flat).innerHTML=s;
+  const pct=totalDue>0?Math.min(100,Math.round(val/totalDue*100)):0;
+  const prog=document.getElementById('prog_'+flat);
+  prog.style.width=pct+'%';
+  prog.style.background=pct>=100?'var(--accent2)':pct>0?'var(--warn)':'var(--danger)';
+  // Sync checkbox state
+  const chk=document.getElementById('chk_'+flat);
+  if(chk) chk.checked=isFullPaid;
+  // Row highlight
+  const row=document.getElementById('row_'+flat);
+  if(row){row.className=isFullPaid?'row-paid':'';}
+}
+
+function saveMaintenance(){
+  const ym=curMonth();const owners=getOwners();const m={};
+  const pb=getPrevBal();
+  owners.forEach(o=>{
+    const monthly=parseFloat(document.getElementById('due_'+o.flatNo)?.value)||o.monthlyDue||0;
+    const paid=parseFloat(document.getElementById('pay_'+o.flatNo)?.value)||0;
+    if(monthly!==o.monthlyDue) o.monthlyDue=monthly;
+    if(paid>0) m[o.flatNo]=paid;
+  });
+  setOwners(owners);
+  setMaint(ym,m);
+  renderDashboard();renderOwners();
+  toast('💾 Maintenance data saved!');
+}
+
+function markAllPaid(){
+  const owners=getOwners(),pb=getPrevBal();
+  owners.forEach(o=>{
+    const prev=pb[o.flatNo]?.amount||0;
+    const monthly=parseFloat(document.getElementById('due_'+o.flatNo)?.value)||o.monthlyDue||0;
+    const totalDue=monthly+Math.max(0,prev);
+    const payEl=document.getElementById('pay_'+o.flatNo);
+    if(payEl){payEl.value=totalDue; updatePayPreview(o.flatNo);}
+  });
+  toast('All marked as paid — click Save to confirm');
+}
+
+function clearAllMaint(){
+  if(!confirm('Clear all payment entries for this month? (Data will not be deleted until you Save)')) return;
+  const owners=getOwners();
+  owners.forEach(o=>{
+    const payEl=document.getElementById('pay_'+o.flatNo);
+    const chkEl=document.getElementById('chk_'+o.flatNo);
+    if(payEl){payEl.value=''; updatePayPreview(o.flatNo);}
+    if(chkEl) chkEl.checked=false;
+  });
+  toast('All entries cleared — click Save to confirm');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EXPENSES
+// ══════════════════════════════════════════════════════════════
+function addExpense(){
+  const ym=curMonth();
+  let cat=document.getElementById('expCustomCat').value.trim()||document.getElementById('expCategory').value;
+  const desc=document.getElementById('expDesc').value.trim();
+  const amt=parseFloat(document.getElementById('expAmount').value)||0;
+  if(!amt){toast('Enter amount');return;}
+  const exps=getExp(ym);
+  exps.push({category:cat,desc:desc||cat,amount:amt});
+  setExp(ym,exps);
+  const sel=document.getElementById('expCategory');
+  if(document.getElementById('expCustomCat').value.trim()&&![...sel.options].some(o=>o.value===cat)){
+    const opt=document.createElement('option');opt.value=cat;opt.textContent=cat;sel.appendChild(opt);
+  }
+  document.getElementById('expDesc').value='';
+  document.getElementById('expAmount').value='';
+  document.getElementById('expCustomCat').value='';
+  renderExpenses();renderDashboard();toast('Expense added!');
+}
+function deleteExpense(ym,idx){
+  const exps=getExp(ym);exps.splice(idx,1);setExp(ym,exps);
+  renderExpenses();renderDashboard();toast('Expense deleted.');
+}
+function renderExpenses(){
+  const ym=curMonth();
+  document.getElementById('expMonthLabel').textContent=monthLbl(ym);
+  document.getElementById('expMonthLabel2').textContent=monthLbl(ym);
+  const exps=getExp(ym);let total=0;
+  document.getElementById('expBody').innerHTML=exps.length
+    ?exps.map((e,i)=>{total+=e.amount;return`<tr><td>${i+1}</td><td><span class="badge badge-blue">${e.category}</span></td><td>${e.desc}</td><td>₹${fmt(e.amount)}</td><td><button class="btn btn-danger btn-sm" onclick="deleteExpense('${ym}',${i})">✕</button></td></tr>`;}).join('')
+    :`<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:12px;">No expenses this month.</td></tr>`;
+  document.getElementById('expFoot').innerHTML=`<tr style="background:var(--surface2)"><td colspan="3"><strong>Total</strong></td><td><strong>₹${fmt(total)}</strong></td><td></td></tr>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PREVIOUS BALANCE
+// ══════════════════════════════════════════════════════════════
+function loadOpeningBalDisplay(){
+  const ob=getOpeningBal();
+  const el=document.getElementById('openingBalDisplay');
+  if(!el) return;
+  if(ob.amount){
+    el.innerHTML=`✅ Saved: <strong>${ob.ym?monthLbl(ob.ym):''}</strong> — Opening Balance: <strong>₹${fmt(ob.amount)}</strong>${ob.note?' ('+ob.note+')':''}`;
+    try{document.getElementById('openingMonth').value=ob.ym||'';}catch(e){}
+    document.getElementById('openingBalance').value=ob.amount;
+    document.getElementById('openingNote').value=ob.note||'';
+  } else { el.innerHTML=''; }
+}
+function saveOpeningBalance(){
+  const ym=document.getElementById('openingMonth').value;
+  const amt=parseFloat(document.getElementById('openingBalance').value)||0;
+  const note=document.getElementById('openingNote').value.trim();
+  setOpeningBal({ym,amount:amt,note});
+  loadOpeningBalDisplay();renderDashboard();
+  toast('Opening balance saved!');
+}
+function renderPrevBal(){
+  const owners=getOwners(),pb=getPrevBal();
+  let totalArr=0,totalAdv=0;
+  document.getElementById('prevBalBody').innerHTML=owners.map(o=>{
+    const entry=pb[o.flatNo]||{amount:0,note:''};
+    const v=entry.amount||0;
+    if(v>0) totalArr+=v; else totalAdv+=Math.abs(v);
+    const badge=v>0?`<span class="badge badge-red">Arrears</span>`
+      :v<0?`<span class="badge badge-teal">Advance</span>`
+      :`<span style="color:var(--muted);font-size:11px">—</span>`;
+    return`<tr>
+      <td><strong>${o.flatNo}</strong></td>
+      <td class="mr" style="font-size:11px">${o.ownerName}</td>
+      <td><input type="number" class="prev-bal-input" id="pb_${o.flatNo}"
+          value="${v||''}" placeholder="0" style="width:90px;padding:5px 7px;text-align:right;"
+          title="Positive=Arrears, Negative=Advance"></td>
+      <td><input type="text" id="pbn_${o.flatNo}" value="${entry.note||''}" placeholder="Note..." style="width:140px;font-size:11px;padding:5px 8px;"></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('prevBalFoot').innerHTML=`
+    <tr style="background:var(--surface2)">
+      <td colspan="2"><strong>Total</strong></td>
+      <td><span class="badge badge-red">Arrears: ₹${fmt(totalArr)}</span> &nbsp; <span class="badge badge-teal">Advance: ₹${fmt(totalAdv)}</span></td>
+      <td colspan="2"></td>
+    </tr>`;
+}
+function savePrevBalance(){
+  const owners=getOwners(),pb={};
+  owners.forEach(o=>{
+    const v=parseFloat(document.getElementById('pb_'+o.flatNo)?.value)||0;
+    const note=document.getElementById('pbn_'+o.flatNo)?.value||'';
+    if(v!==0||note) pb[o.flatNo]={amount:v,note};
+  });
+  setPrevBal(pb);
+  renderMaintenance();renderDashboard();renderOwners();
+  toast('💾 Previous balance saved!');
+}
+function clearAllPrevBal(){
+  if(!confirm('Reset all previous balances to zero?')) return;
+  setPrevBal({});renderPrevBal();renderMaintenance();renderDashboard();
+  toast('All previous balances cleared.');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════════════════════════
+function renderReports(){
+  const s=getSettings();const yr=s.year;
+  if(!reportMonth) reportMonth=curMonth();
+  const chips=document.getElementById('reportMonthChips');
+  chips.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const mym=yr+'-'+String(m).padStart(2,'0');
+    const c=document.createElement('div');
+    c.className='chip'+(mym===reportMonth?' active':'');
+    c.textContent=MONTHS[m-1];
+    c.onclick=((_mym)=>()=>{reportMonth=_mym;renderReports();})(mym);
+    chips.appendChild(c);
+  }
+  const ym=reportMonth,owners=getOwners(),maint=getMaint(ym),pb=getPrevBal();
+  const ms=calcMaintStats(ym),totalExp=calcExpStats(ym);
+  const ob=getOpeningBal();
+  const fundBal=(ob.amount||0)+ms.totalPaid-totalExp;
+  document.getElementById('reportStats').innerHTML=`
+    <div class="stat-box blue"><div class="lbl">Monthly Due</div><div class="val">₹${fmt(ms.totalDue)}</div></div>
+    <div class="stat-box orange"><div class="lbl">Prev. Balance</div><div class="val">₹${fmt(ms.totalPrevBal)}</div></div>
+    <div class="stat-box green"><div class="lbl">Collected</div><div class="val">₹${fmt(ms.totalPaid)}</div></div>
+    <div class="stat-box red"><div class="lbl">Pending</div><div class="val">₹${fmt(ms.totalPending)}</div></div>
+    <div class="stat-box blue"><div class="lbl">Expenses</div><div class="val">₹${fmt(totalExp)}</div></div>
+    <div class="stat-box ${fundBal>=0?'green':'red'}"><div class="lbl">Fund Balance</div><div class="val">₹${fmt(Math.abs(fundBal))} ${fundBal>=0?'▲':'▼'}</div></div>`;
+  document.getElementById('reportMaintBody').innerHTML=owners.map(o=>{
+    const monthly=o.monthlyDue||0,prev=pb[o.flatNo]?.amount||0;
+    const total=monthly+Math.max(0,prev),paid=maint[o.flatNo]||0,rem=Math.max(0,total-paid);
+    const st=paid>=total&&total>0?`<span class="badge badge-green">Paid</span>`:paid>0?`<span class="badge badge-orange">Partial</span>`:`<span class="badge badge-red">Unpaid</span>`;
+    const pbTxt=prev!==0?`<span class="${prev>0?'badge badge-orange':'badge badge-teal'}">₹${fmt(Math.abs(prev))}</span>`:'—';
+    return`<tr><td>${o.flatNo}</td><td class="mr" style="font-size:11px">${o.ownerName}</td><td>₹${fmt(monthly)}</td><td>${pbTxt}</td><td>₹${fmt(total)}</td><td>₹${fmt(paid)}</td><td>₹${fmt(rem)}</td><td>${st}</td></tr>`;
+  }).join('');
+  let expTotal=0;
+  const expRows=getExp(ym);
+  document.getElementById('reportExpBody').innerHTML=expRows.length
+    ?expRows.map(e=>{expTotal+=e.amount;return`<tr><td><span class="badge badge-blue">${e.category}</span></td><td>${e.desc}</td><td>₹${fmt(e.amount)}</td></tr>`;}).join('')
+    :`<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:12px;">No expenses this month.</td></tr>`;
+  document.getElementById('reportExpFoot').innerHTML=`<tr style="background:var(--surface2)"><td colspan="2"><strong>Total Expenses</strong></td><td><strong>₹${fmt(expTotal)}</strong></td></tr>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DATA CORRECTION
+// ══════════════════════════════════════════════════════════════
+function renderCorrectionMonthGrid(){
+  const s=getSettings();const yr=s.year;
+  const grid=document.getElementById('correctionMonthGrid');
+  if(!grid) return;
+  grid.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const mym=yr+'-'+String(m).padStart(2,'0');
+    const maint=getMaint(mym);
+    const exps=getExp(mym);
+    const hasMaint=Object.keys(maint).length>0;
+    const hasExp=exps.length>0;
+    const hasData=hasMaint||hasExp;
+    const ms=calcMaintStats(mym);
+    const div=document.createElement('div');
+    div.className='correction-month-btn'+(hasData?' has-data':'');
+    div.innerHTML=`
+      <div class="cm-lbl">${yr}</div>
+      <div class="cm-val">${MONTHS[m-1]}</div>
+      ${hasMaint?`<div class="cm-data">💰 Maint: ₹${fmt(ms.totalPaid)}</div>`:''}
+      ${hasExp?`<div class="cm-data">📋 Exp: ${exps.length} entries</div>`:''}
+      ${!hasData?'<div style="font-size:10px;color:var(--muted);margin-top:3px;">No data</div>':''}
+    `;
+    div.onclick=((_mym)=>()=>{
+      document.getElementById('correctionMonthSelect').value=_mym;
+      renderCorrectionDetail();
+      document.getElementById('correctionMonthSelect').scrollIntoView({behavior:'smooth'});
+    })(mym);
+    grid.appendChild(div);
+  }
+}
+
+function renderCorrectionDetail(){
+  const sel=document.getElementById('correctionMonthSelect');
+  if(!sel) return;
+  const ym=sel.value;
+  if(!ym) return;
+  const owners=getOwners(),maint=getMaint(ym),exps=getExp(ym);
+  const hasMaint=Object.keys(maint).length>0;
+  const hasExp=exps.length>0;
+  const ms=calcMaintStats(ym);
+
+  let html=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Showing data for: <strong style="color:var(--text)">${monthLbl(ym)}</strong></div>`;
+
+  if(!hasMaint&&!hasExp){
+    html+=`<div class="alert alert-success">✅ No data recorded for ${monthLbl(ym)}. Nothing to correct.</div>`;
+  } else {
+    if(hasMaint){
+      const paidFlats=owners.filter(o=>maint[o.flatNo]>0);
+      html+=`<div class="card" style="margin-bottom:10px;">
+        <h2>💰 Maintenance Data (${monthLbl(ym)})</h2>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Room</th><th>Member</th><th>Amount Paid</th></tr></thead>
+          <tbody>${paidFlats.map(o=>`<tr><td>${o.flatNo}</td><td class="mr" style="font-size:11px">${o.ownerName}</td><td>₹${fmt(maint[o.flatNo])}</td></tr>`).join('')}</tbody>
+          <tfoot><tr style="background:var(--surface2)"><td colspan="2"><strong>Total Collected</strong></td><td><strong>₹${fmt(ms.totalPaid)}</strong></td></tr></tfoot>
+        </table></div>
+      </div>`;
+    } else {
+      html+=`<div class="alert alert-info">ℹ️ No maintenance payments recorded for ${monthLbl(ym)}.</div>`;
+    }
+    if(hasExp){
+      let expTotal=0;
+      html+=`<div class="card" style="margin-bottom:10px;">
+        <h2>📋 Expense Data (${monthLbl(ym)})</h2>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>#</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
+          <tbody>${exps.map((e,i)=>{expTotal+=e.amount;return`<tr><td>${i+1}</td><td><span class="badge badge-blue">${e.category}</span></td><td>${e.desc}</td><td>₹${fmt(e.amount)}</td></tr>`;}).join('')}</tbody>
+          <tfoot><tr style="background:var(--surface2)"><td colspan="3"><strong>Total</strong></td><td><strong>₹${fmt(expTotal)}</strong></td></tr></tfoot>
+        </table></div>
+      </div>`;
+    } else {
+      html+=`<div class="alert alert-info">ℹ️ No expenses recorded for ${monthLbl(ym)}.</div>`;
+    }
+    html+=`<div class="alert alert-warn" style="margin-top:4px;">
+      ⚠️ Use the buttons below to clear data for this month. After clearing, switch to the correct month and re-enter the data there.
+    </div>`;
+  }
+  document.getElementById('correctionDetail').innerHTML=html;
+}
+
+function clearCorrectionMaintDirect(){
+  const ym=document.getElementById('correctionMonthSelect').value;
+  if(!confirm(`Clear ALL maintenance payment data for ${monthLbl(ym)}?\n\nThis cannot be undone.`)) return;
+  setMaint(ym,{});
+  refreshAll();
+  toast(`✅ Maintenance data cleared for ${monthLbl(ym)}`);
+}
+function clearCorrectionExpDirect(){
+  const ym=document.getElementById('correctionMonthSelect').value;
+  if(!confirm(`Clear ALL expense data for ${monthLbl(ym)}?\n\nThis cannot be undone.`)) return;
+  setExp(ym,[]);
+  refreshAll();
+  toast(`✅ Expense data cleared for ${monthLbl(ym)}`);
+}
+function clearCorrectionAllDirect(){
+  const ym=document.getElementById('correctionMonthSelect').value;
+  if(!confirm(`Clear ALL data (maintenance + expenses) for ${monthLbl(ym)}?\n\nThis cannot be undone.`)) return;
+  setMaint(ym,{});
+  setExp(ym,[]);
+  refreshAll();
+  toast(`✅ All data cleared for ${monthLbl(ym)}`);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════════════════
+function saveSettings(){
+  const s=getSettings();
+  s.societyName=document.getElementById('settSociety').value.trim()||'Government Officers Quarters';
+  setSettings(s);
+  document.getElementById('societySubtitle').textContent=s.societyName;
+  toast('Settings saved!');
+}
+function changeYear(){
+  const s=getSettings();s.year=parseInt(document.getElementById('settYear').value);
+  setSettings(s);buildMonthOptions(s.year);refreshAll();toast('Year changed to '+s.year);
+}
+function bulkUpdateDue(){
+  const newDue=parseFloat(document.getElementById('bulkDue').value);
+  if(!newDue||newDue<=0){toast('Enter amount');return;}
+  if(!confirm(`Update monthly due to ₹${fmt(newDue)} for all ${getOwners().length} members?`)) return;
+  const owners=getOwners();
+  owners.forEach(o=>o.monthlyDue=newDue);
+  setOwners(owners);
+  refreshAll();
+  document.getElementById('bulkDueStatus').textContent=`✅ Updated ${owners.length} members to ₹${fmt(newDue)}/month.`;
+  toast('All dues updated!');
+}
+function renderTransferLog(){
+  const log=getTransferLog();
+  document.getElementById('transferLog').innerHTML=log.length
+    ?[...log].reverse().map(t=>`<tr>
+        <td>${t.flat}</td>
+        <td class="mr" style="font-size:11px;color:var(--danger)">${t.oldName}</td>
+        <td class="mr" style="font-size:11px;color:var(--accent2)">${t.newName}</td>
+        <td style="font-size:11px">${t.date}</td>
+        <td style="font-size:10px;color:var(--muted)">${t.note||'—'}</td>
+      </tr>`).join('')
+    :`<tr><td colspan="5" style="color:var(--muted)">No transfer records.</td></tr>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ══════════════════════════════════════════════════════════════
+function exportCSV(){
+  const ym = reportMonth || curMonth();
+  const owners = getOwners();
+  const maint  = getMaint(ym);
+  const pb     = getPrevBal();
+  const exps   = getExp(ym);
+  const ob     = getOpeningBal();
+  const s      = getSettings();
+
+  // ── Compute all summary figures ──────────────────────────────
+  const ms = calcMaintStats(ym);
+  let totalExpAmt = 0;
+  exps.forEach(e => totalExpAmt += e.amount||0);
+
+  // Expense breakdown by category
+  const bycat = {};
+  exps.forEach(e => { bycat[e.category] = (bycat[e.category]||0) + e.amount; });
+
+  const openingFund   = ob.amount || 0;
+  const fundBalance   = openingFund + ms.totalPaid - totalExpAmt;
+  const paidFlats     = owners.filter(o => {
+    const due = (o.monthlyDue||0) + Math.max(0, pb[o.flatNo]?.amount||0);
+    return due > 0 && (maint[o.flatNo]||0) >= due;
+  }).length;
+  const partialFlats  = owners.filter(o => {
+    const due = (o.monthlyDue||0) + Math.max(0, pb[o.flatNo]?.amount||0);
+    const paid = maint[o.flatNo]||0;
+    return paid > 0 && paid < due;
+  }).length;
+  const unpaidFlats   = owners.length - paidFlats - partialFlats;
+
+  let csv = '\uFEFF'; // UTF-8 BOM for Excel Marathi support
+
+  // ════════════════════════════════════════════════
+  // SECTION 1 — REPORT HEADER
+  // ════════════════════════════════════════════════
+  csv += `SOCIETY MAINTENANCE REPORT\n`;
+  csv += `Society Name,${s.societyName}\n`;
+  csv += `Report Month,${monthLbl(ym)}\n`;
+  csv += `Generated On,${new Date().toLocaleDateString('en-IN')}\n`;
+  csv += `Total Flats,${owners.length}\n`;
+  csv += `\n`;
+
+  // ════════════════════════════════════════════════
+  // SECTION 2 — MONTHLY FINANCIAL SUMMARY
+  // ════════════════════════════════════════════════
+  csv += `MONTHLY FINANCIAL SUMMARY\n`;
+  csv += `Head,Amount (Rs.),Remarks\n`;
+  csv += `Opening Fund Balance,${openingFund},"Balance brought forward${ob.note?' - '+ob.note:''}"\n`;
+  csv += `Monthly Maintenance Due,${ms.totalDue},"${owners.length} flats x due amount"\n`;
+  csv += `Previous Arrears (Flat-wise),${ms.totalPrevBal},"Carried over from previous months"\n`;
+  csv += `Total Due (Monthly + Arrears),${ms.totalRequired},"Sum of all dues"\n`;
+  csv += `Total Maintenance Collected,${ms.totalPaid},"Amount actually received"\n`;
+  csv += `Total Pending / Uncollected,${ms.totalPending},"Still to be collected"\n`;
+  csv += `\n`;
+  csv += `Total Expenses This Month,${totalExpAmt},"All expense heads combined"\n`;
+  csv += `\n`;
+  csv += `Net Balance (Collected - Expenses),${ms.totalPaid - totalExpAmt},"${ms.totalPaid - totalExpAmt >= 0 ? 'SURPLUS' : 'DEFICIT'}"\n`;
+  csv += `Fund Balance (Opening + Collected - Expenses),${fundBalance},"${fundBalance >= 0 ? 'SURPLUS' : 'DEFICIT'} - Available fund"\n`;
+  csv += `\n`;
+
+  // ════════════════════════════════════════════════
+  // SECTION 3 — COLLECTION STATUS SUMMARY
+  // ════════════════════════════════════════════════
+  csv += `COLLECTION STATUS SUMMARY\n`;
+  csv += `Status,No. of Flats,Amount (Rs.)\n`;
+  csv += `Fully Paid,${paidFlats},${owners.filter(o=>(maint[o.flatNo]||0)>=(o.monthlyDue||0)&&(o.monthlyDue||0)>0).reduce((s,o)=>s+(maint[o.flatNo]||0),0)}\n`;
+  csv += `Partially Paid,${partialFlats},${owners.filter(o=>{ const due=(o.monthlyDue||0)+Math.max(0,pb[o.flatNo]?.amount||0); const p=maint[o.flatNo]||0; return p>0&&p<due; }).reduce((s,o)=>s+(maint[o.flatNo]||0),0)}\n`;
+  csv += `Unpaid,${unpaidFlats},0\n`;
+  csv += `TOTAL,${owners.length},${ms.totalPaid}\n`;
+  csv += `\n`;
+
+  // ════════════════════════════════════════════════
+  // SECTION 4 — EXPENSE BREAKDOWN BY CATEGORY
+  // ════════════════════════════════════════════════
+  csv += `EXPENSE BREAKDOWN BY CATEGORY\n`;
+  csv += `Category,Amount (Rs.),% of Total Expenses\n`;
+  Object.entries(bycat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt]) => {
+    const pct = totalExpAmt > 0 ? ((amt/totalExpAmt)*100).toFixed(1) : '0.0';
+    csv += `${cat},${amt},${pct}%\n`;
+  });
+  csv += `TOTAL EXPENSES,${totalExpAmt},100%\n`;
+  csv += `\n`;
+
+  // ════════════════════════════════════════════════
+  // SECTION 5 — FLAT-WISE MAINTENANCE DETAIL
+  // ════════════════════════════════════════════════
+  csv += `FLAT-WISE MAINTENANCE DETAIL\n`;
+  csv += `Room No.,Member Name,Monthly Due (Rs.),Prev Arrears (Rs.),Total Due (Rs.),Amount Paid (Rs.),Balance Pending (Rs.),Status\n`;
+  owners.forEach(o => {
+    const m   = o.monthlyDue||0;
+    const p   = pb[o.flatNo]?.amount||0;
+    const t   = m + Math.max(0,p);
+    const paid= maint[o.flatNo]||0;
+    const bal = Math.max(0, t-paid);
+    const st  = paid>=t&&t>0 ? 'Paid' : paid>0 ? 'Partial' : 'Unpaid';
+    csv += `${o.flatNo},"${o.ownerName}",${m},${Math.max(0,p)},${t},${paid},${bal},${st}\n`;
+  });
+  // Totals row
+  const tDue   = owners.reduce((s,o)=>s+(o.monthlyDue||0),0);
+  const tPrev  = owners.reduce((s,o)=>s+Math.max(0,pb[o.flatNo]?.amount||0),0);
+  const tTotal = tDue + tPrev;
+  const tPaid  = owners.reduce((s,o)=>s+(maint[o.flatNo]||0),0);
+  const tBal   = Math.max(0, tTotal - tPaid);
+  csv += `TOTAL,,${tDue},${tPrev},${tTotal},${tPaid},${tBal},\n`;
+  csv += `\n`;
+
+  // ════════════════════════════════════════════════
+  // SECTION 6 — EXPENSE DETAIL
+  // ════════════════════════════════════════════════
+  csv += `EXPENSE DETAIL\n`;
+  csv += `#,Category,Description,Amount (Rs.)\n`;
+  let expRunTotal = 0;
+  exps.forEach((e,i) => {
+    expRunTotal += e.amount;
+    csv += `${i+1},${e.category},"${e.desc}",${e.amount}\n`;
+  });
+  csv += `,,TOTAL EXPENSES,${expRunTotal}\n`;
+  csv += `\n`;
+
+  // ════════════════════════════════════════════════
+  // SECTION 7 — YEARLY SUMMARY (all 12 months)
+  // ════════════════════════════════════════════════
+  csv += `YEARLY SUMMARY (${s.year})\n`;
+  csv += `Month,Monthly Due (Rs.),Prev Arrears (Rs.),Total Due (Rs.),Collected (Rs.),Pending (Rs.),Expenses (Rs.),Net Balance (Rs.),Status\n`;
+  let yTotalDue=0,yTotalPrev=0,yTotalReq=0,yTotalColl=0,yTotalPend=0,yTotalExp=0;
+  for(let m=1;m<=12;m++){
+    const mym = s.year+'-'+String(m).padStart(2,'0');
+    const ms2 = calcMaintStats(mym);
+    const exp2 = calcExpStats(mym);
+    const bal2 = ms2.totalPaid - exp2;
+    yTotalDue  += ms2.totalDue;
+    yTotalPrev += ms2.totalPrevBal;
+    yTotalReq  += ms2.totalRequired;
+    yTotalColl += ms2.totalPaid;
+    yTotalPend += ms2.totalPending;
+    yTotalExp  += exp2;
+    const hasMaint = Object.keys(getMaint(mym)).length > 0;
+    const hasExp   = getExp(mym).length > 0;
+    const status   = !hasMaint && !hasExp ? 'No Data' : mym===ym ? 'Current Month' : 'Recorded';
+    csv += `${MONTHS[m-1]} ${s.year},${ms2.totalDue},${ms2.totalPrevBal},${ms2.totalRequired},${ms2.totalPaid},${ms2.totalPending},${exp2},${bal2},${status}\n`;
+  }
+  csv += `YEAR TOTAL,,${yTotalPrev},${yTotalReq},${yTotalColl},${yTotalPend},${yTotalExp},${yTotalColl-yTotalExp},\n`;
+
+  // ── Download ──────────────────────────────────────────────
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Society_Report_${ym}.csv`;
+  a.click();
+  toast('CSV exported with full summary!');
+}
+async function exportAllData(){
+  // Collect from memory cache (which mirrors IDB)
+  const data={};
+  Object.entries(_memCache).filter(([k])=>k.startsWith('soc_')).forEach(([k,v])=>data[k]=v);
+  // Also catch any localStorage-only keys
+  Object.keys(localStorage).filter(k=>k.startsWith('soc_')&&!(k in data)).forEach(k=>{
+    try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){}
+  });
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='SocietyBackup_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('Backup created!');
+}
+function importData(){document.getElementById('importFile').click();}
+function doImport(e){
+  const file=e.target.files[0];if(!file) return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      // Write to memory cache, localStorage, and IndexedDB
+      await Promise.all(Object.entries(d).map(([k,v])=>{
+        _memCache[k]=v;
+        try{localStorage.setItem(k,JSON.stringify(v));}catch(ex){}
+        return idbSet(k,v);
+      }));
+      refreshAll();
+      showStorageStatus();
+      toast('Data imported to IndexedDB + localStorage!');
+    }catch(ex){toast('Invalid file.');}
+  };
+  r.readAsText(file);e.target.value='';
+}
+async function clearAll(){
+  if(!confirm('Delete ALL society data from this device?\nThis will clear BOTH IndexedDB and localStorage.')) return;
+  // Clear localStorage
+  Object.keys(localStorage).filter(k=>k.startsWith('soc_')).forEach(k=>localStorage.removeItem(k));
+  // Clear IndexedDB
+  try {
+    const keys = await idbGetAllKeys();
+    await Promise.all(keys.filter(k=>String(k).startsWith('soc_')).map(k=>idbDel(k)));
+  } catch(e){}
+  // Clear memory cache
+  Object.keys(_memCache).forEach(k=>delete _memCache[k]);
+  location.reload();
+}
+
+
+// ══════════════════════════════════════════════════════════════
+//  EXPORT EXCEL — Professional formatted workbook
+// ══════════════════════════════════════════════════════════════
+function exportExcel(){
+  if(typeof XLSX==='undefined'){toast('Loading Excel library... try again in 2 seconds.');return;}
+  const ym     = reportMonth || curMonth();
+  const owners = getOwners();
+  const maint  = getMaint(ym);
+  const pb     = getPrevBal();
+  const exps   = getExp(ym);
+  const ob     = getOpeningBal();
+  const s      = getSettings();
+  const ms     = calcMaintStats(ym);
+  let totalExpAmt=0; exps.forEach(e=>totalExpAmt+=e.amount||0);
+  const bycat={};
+  exps.forEach(e=>{bycat[e.category]=(bycat[e.category]||0)+e.amount;});
+  const openingFund = ob.amount||0;
+  const fundBalance = openingFund+ms.totalPaid-totalExpAmt;
+  const netBalance  = ms.totalPaid-totalExpAmt;
+
+  const wb = XLSX.utils.book_new();
+
+  // ── COLOUR PALETTE ──────────────────────────────────────────
+  const C = {
+    navyBg:   {patternType:'solid', fgColor:{rgb:'1B3A6B'}},
+    navyTxt:  {rgb:'FFFFFF'},
+    tealBg:   {patternType:'solid', fgColor:{rgb:'1A7A6A'}},
+    tealTxt:  {rgb:'FFFFFF'},
+    blueBg:   {patternType:'solid', fgColor:{rgb:'2563EB'}},
+    blueTxt:  {rgb:'FFFFFF'},
+    greenBg:  {patternType:'solid', fgColor:{rgb:'16A34A'}},
+    greenTxt: {rgb:'FFFFFF'},
+    redBg:    {patternType:'solid', fgColor:{rgb:'DC2626'}},
+    redTxt:   {rgb:'FFFFFF'},
+    orangeBg: {patternType:'solid', fgColor:{rgb:'D97706'}},
+    orangeTxt:{rgb:'FFFFFF'},
+    purpleBg: {patternType:'solid', fgColor:{rgb:'7C3AED'}},
+    purpleTxt:{rgb:'FFFFFF'},
+    greyBg:   {patternType:'solid', fgColor:{rgb:'F1F5F9'}},
+    greyMid:  {patternType:'solid', fgColor:{rgb:'CBD5E1'}},
+    greyDark: {patternType:'solid', fgColor:{rgb:'64748B'}},
+    yellowBg: {patternType:'solid', fgColor:{rgb:'FEF9C3'}},
+    whiteBg:  {patternType:'solid', fgColor:{rgb:'FFFFFF'}},
+    totalBg:  {patternType:'solid', fgColor:{rgb:'1E293B'}},
+    totalTxt: {rgb:'F8FAFC'},
+    paidBg:   {patternType:'solid', fgColor:{rgb:'D1FAE5'}},
+    partBg:   {patternType:'solid', fgColor:{rgb:'FEF3C7'}},
+    unpaidBg: {patternType:'solid', fgColor:{rgb:'FEE2E2'}},
+    surplusBg:{patternType:'solid', fgColor:{rgb:'DCFCE7'}},
+    deficitBg:{patternType:'solid', fgColor:{rgb:'FEE2E2'}},
+    black:    {rgb:'000000'},
+    darkGrey: {rgb:'334155'},
+  };
+
+  // ── STYLE HELPERS ────────────────────────────────────────────
+  function cs(fg,bg,bold,sz,align,border,italic){
+    const s={font:{name:'Arial',sz:sz||10,bold:!!bold,italic:!!italic,color:fg||{rgb:'000000'}},
+             alignment:{horizontal:align||'left',vertical:'center',wrapText:true}};
+    if(bg) s.fill=bg;
+    if(border){
+      const bd={style:'thin',color:{rgb:'CBD5E1'}};
+      s.border={top:bd,bottom:bd,left:bd,right:bd};
+    }
+    return s;
+  }
+  function thickBorder(){
+    const bd={style:'medium',color:{rgb:'334155'}};
+    return{top:bd,bottom:bd,left:bd,right:bd};
+  }
+  function merge(ws,r1,c1,r2,c2){
+    if(!ws['!merges']) ws['!merges']=[];
+    ws['!merges'].push({s:{r:r1,c:c1},e:{r:r2,c:c2}});
+  }
+  function cell(v,style){return{v,t:typeof v==='number'?'n':'s',s:style};}
+  function numCell(v,style,fmt){
+    const c={v,t:'n',s:style};
+    if(fmt) c.z=fmt;
+    return c;
+  }
+  function setCell(ws,r,c,v,style,fmt){
+    const addr=XLSX.utils.encode_cell({r,c});
+    ws[addr]=typeof v==='number'?numCell(v,style,fmt):cell(v,style);
+  }
+  function setRow(ws,r,vals,styles,fmts){
+    vals.forEach((v,c)=>setCell(ws,r,c,v,styles[c]||styles[0],fmts?fmts[c]:null));
+  }
+  function setRange(ws,maxR,maxC){
+    const cur=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):{s:{r:0,c:0},e:{r:0,c:0}};
+    if(maxR>cur.e.r) cur.e.r=maxR;
+    if(maxC>cur.e.c) cur.e.c=maxC;
+    ws['!ref']=XLSX.utils.encode_range(cur);
+  }
+  const INR='₹#,##0';
+
+  // ════════════════════════════════════════════════════════════
+  // SHEET 1 — MONTHLY SUMMARY
+  // ════════════════════════════════════════════════════════════
+  const ws1={};
+  let r=0;
+
+  // Title block
+  setCell(ws1,r,0,s.societyName,cs(C.navyTxt,C.navyBg,true,16,'center'));
+  merge(ws1,r,0,r,6); r++;
+  setCell(ws1,r,0,'MAINTENANCE REPORT — '+monthLbl(ym).toUpperCase(),cs(C.navyTxt,C.navyBg,true,12,'center'));
+  merge(ws1,r,0,r,6); r++;
+  setCell(ws1,r,0,'Generated: '+new Date().toLocaleDateString('en-IN')+'   |   Total Flats: '+owners.length,
+          cs(C.navyTxt,{patternType:'solid',fgColor:{rgb:'2D5DB0'}},false,10,'center'));
+  merge(ws1,r,0,r,6); r+=2;
+
+  // ── Section A: Financial Summary ──────────────────────────
+  setCell(ws1,r,0,'A.  FINANCIAL SUMMARY',cs(C.tealTxt,C.tealBg,true,11,'left'));
+  merge(ws1,r,0,r,6); r++;
+
+  const hdrStyle=cs(C.navyTxt,{patternType:'solid',fgColor:{rgb:'3B82F6'}},true,10,'center',true);
+  ['HEAD','AMOUNT (₹)','REMARKS'].forEach((h,c)=>setCell(ws1,r,c,h,hdrStyle));
+  merge(ws1,r,2,r,6); r++;
+
+  const rows_fs=[
+    ['Opening Fund Balance',openingFund,ob.note?'Balance b/f — '+ob.note:'Balance brought forward',openingFund>=0?C.surplusBg:C.deficitBg],
+    ['Monthly Maintenance Due',ms.totalDue,owners.length+' flats × individual dues',C.yellowBg],
+    ['Previous Arrears (Flat-wise)',ms.totalPrevBal,'Carried from previous months',ms.totalPrevBal>0?C.partBg:C.whiteBg],
+    ['Total Due (Monthly + Arrears)',ms.totalRequired,'Sum of all dues this month',C.yellowBg],
+    ['','','',''],
+    ['Total Maintenance Collected',ms.totalPaid,'Amount actually received',C.paidBg],
+    ['Total Pending / Uncollected',ms.totalPending,'Still to be received',ms.totalPending>0?C.unpaidBg:C.paidBg],
+    ['','','',''],
+    ['Total Expenses This Month',totalExpAmt,'All expense heads combined',C.partBg],
+    ['','','',''],
+    ['Net Balance (Collected − Expenses)',netBalance,netBalance>=0?'SURPLUS':'DEFICIT',netBalance>=0?C.surplusBg:C.deficitBg],
+    ['Fund Balance (Opening + Collected − Expenses)',fundBalance,fundBalance>=0?'✅ SURPLUS — Funds available':'⚠️ DEFICIT — Funds short',fundBalance>=0?C.surplusBg:C.deficitBg],
+  ];
+  rows_fs.forEach(([head,amt,rem,bg])=>{
+    if(!head){r++;return;}
+    const rowBg={patternType:'solid',fgColor:bg.fgColor||{rgb:'FFFFFF'}};
+    const isBold=head.includes('Total Due')||head.includes('Fund Balance')||head.includes('Net Balance');
+    setCell(ws1,r,0,head,cs(C.black,rowBg,isBold,10,'left',true));
+    setCell(ws1,r,1,amt,cs(isBold?C.darkGrey:C.black,rowBg,isBold,10,'right',true),INR);
+    setCell(ws1,r,2,rem,cs(C.darkGrey,rowBg,false,9,'left',true));
+    merge(ws1,r,2,r,6); r++;
+  });
+  r++;
+
+  // ── Section B: Collection Status ────────────────────────
+  setCell(ws1,r,0,'B.  COLLECTION STATUS',cs(C.tealTxt,C.tealBg,true,11,'left'));
+  merge(ws1,r,0,r,6); r++;
+  ['STATUS','NO. OF FLATS','AMOUNT COLLECTED (₹)'].forEach((h,c)=>setCell(ws1,r,c,h,hdrStyle));
+  r++;
+  const paidFlats  = owners.filter(o=>{const d=(o.monthlyDue||0)+Math.max(0,pb[o.flatNo]?.amount||0);return d>0&&(maint[o.flatNo]||0)>=d;});
+  const partFlats  = owners.filter(o=>{const d=(o.monthlyDue||0)+Math.max(0,pb[o.flatNo]?.amount||0);const p=maint[o.flatNo]||0;return p>0&&p<d;});
+  const noPay      = owners.filter(o=>(maint[o.flatNo]||0)===0);
+  const cstRows=[
+    ['✅ Fully Paid',paidFlats.length,paidFlats.reduce((s,o)=>s+(maint[o.flatNo]||0),0),C.paidBg],
+    ['⚡ Partially Paid',partFlats.length,partFlats.reduce((s,o)=>s+(maint[o.flatNo]||0),0),C.partBg],
+    ['❌ Unpaid',noPay.length,0,C.unpaidBg],
+  ];
+  cstRows.forEach(([st,cnt,amt,bg])=>{
+    const rowBg={patternType:'solid',fgColor:bg.fgColor};
+    setCell(ws1,r,0,st,cs(C.black,rowBg,false,10,'left',true));
+    setCell(ws1,r,1,cnt,cs(C.black,rowBg,true,10,'center',true));
+    setCell(ws1,r,2,amt,cs(C.black,rowBg,true,10,'right',true),INR);
+    r++;
+  });
+  // Total row
+  setCell(ws1,r,0,'TOTAL',cs(C.totalTxt,C.totalBg,true,10,'left',true));
+  setCell(ws1,r,1,owners.length,cs(C.totalTxt,C.totalBg,true,10,'center',true));
+  setCell(ws1,r,2,ms.totalPaid,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+  r+=2;
+
+  // ── Section C: Expense Breakdown ───────────────────────
+  setCell(ws1,r,0,'C.  EXPENSE BREAKDOWN BY CATEGORY',cs(C.tealTxt,C.tealBg,true,11,'left'));
+  merge(ws1,r,0,r,6); r++;
+  ['CATEGORY','AMOUNT (₹)','% OF TOTAL'].forEach((h,c)=>setCell(ws1,r,c,h,hdrStyle));
+  r++;
+  const sortedCat=Object.entries(bycat).sort((a,b)=>b[1]-a[1]);
+  if(sortedCat.length===0){
+    setCell(ws1,r,0,'No expenses recorded',cs(C.darkGrey,C.greyBg,false,10,'center'));
+    merge(ws1,r,0,r,6); r++;
+  } else {
+    const colors=['2563EB','16A34A','D97706','DC2626','7C3AED','0891B2','DB2777'];
+    sortedCat.forEach(([cat,amt],i)=>{
+      const pct=totalExpAmt>0?((amt/totalExpAmt)*100).toFixed(1)+'%':'0%';
+      const rowBg={patternType:'solid',fgColor:{rgb:i%2===0?'F8FAFC':'FFFFFF'}};
+      setCell(ws1,r,0,cat,cs(C.black,rowBg,false,10,'left',true));
+      setCell(ws1,r,1,amt,cs({rgb:colors[i%colors.length]},rowBg,true,10,'right',true),INR);
+      setCell(ws1,r,2,pct,cs(C.darkGrey,rowBg,false,10,'center',true));
+      r++;
+    });
+    setCell(ws1,r,0,'TOTAL EXPENSES',cs(C.totalTxt,C.totalBg,true,10,'left',true));
+    setCell(ws1,r,1,totalExpAmt,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+    setCell(ws1,r,2,'100%',cs(C.totalTxt,C.totalBg,true,10,'center',true));
+    r++;
+  }
+
+  ws1['!cols']=[{wch:38},{wch:18},{wch:35},{wch:12},{wch:12},{wch:12},{wch:12}];
+  setRange(ws1,r,6);
+  XLSX.utils.book_append_sheet(wb,ws1,'Monthly Summary');
+
+  // ════════════════════════════════════════════════════════════
+  // SHEET 2 — FLAT-WISE COLLECTION
+  // ════════════════════════════════════════════════════════════
+  const ws2={};
+  r=0;
+  setCell(ws2,r,0,s.societyName+' — Flat-wise Collection — '+monthLbl(ym),
+          cs(C.navyTxt,C.navyBg,true,13,'center'));
+  merge(ws2,r,0,r,8); r++;
+
+  const th2=['#','Room','Member Name','Monthly Due (₹)','Prev Arrears (₹)','Total Due (₹)','Amount Paid (₹)','Balance (₹)','Status'];
+  th2.forEach((h,c)=>setCell(ws2,r,c,h,hdrStyle));
+  r++;
+
+  let tDue2=0,tPrev2=0,tTot2=0,tPaid2=0,tBal2=0;
+  owners.forEach((o,i)=>{
+    const m=o.monthlyDue||0,p=pb[o.flatNo]?.amount||0,prev=Math.max(0,p);
+    const tot=m+prev, paid=maint[o.flatNo]||0, bal=Math.max(0,tot-paid);
+    tDue2+=m; tPrev2+=prev; tTot2+=tot; tPaid2+=paid; tBal2+=bal;
+    const st=paid>=tot&&tot>0?'Paid':paid>0?'Partial':'Unpaid';
+    const bg=paid>=tot&&tot>0?C.paidBg:paid>0?C.partBg:C.unpaidBg;
+    const rowBg={patternType:'solid',fgColor:bg.fgColor};
+    const base=cs(C.black,rowBg,false,10,'left',true);
+    const num=cs(C.black,rowBg,false,10,'right',true);
+    setCell(ws2,r,0,i+1,cs(C.darkGrey,rowBg,false,9,'center',true));
+    setCell(ws2,r,1,o.flatNo,cs(C.black,rowBg,true,10,'center',true));
+    setCell(ws2,r,2,o.ownerName,base);
+    setCell(ws2,r,3,m,num,INR);
+    setCell(ws2,r,4,prev,num,INR);
+    setCell(ws2,r,5,tot,cs(C.black,rowBg,true,10,'right',true),INR);
+    setCell(ws2,r,6,paid,num,INR);
+    setCell(ws2,r,7,bal,cs(bal>0?{rgb:'DC2626'}:C.black,rowBg,bal>0,10,'right',true),INR);
+    const stStyle=paid>=tot&&tot>0?cs({rgb:'15803D'},{patternType:'solid',fgColor:{rgb:'D1FAE5'}},true,10,'center',true)
+      :paid>0?cs({rgb:'92400E'},{patternType:'solid',fgColor:{rgb:'FEF3C7'}},true,10,'center',true)
+      :cs({rgb:'DC2626'},{patternType:'solid',fgColor:{rgb:'FEE2E2'}},true,10,'center',true);
+    setCell(ws2,r,8,st,stStyle);
+    r++;
+  });
+  // Total row
+  const totRow=cs(C.totalTxt,C.totalBg,true,10,'right',true);
+  setCell(ws2,r,0,'',cs(C.totalTxt,C.totalBg,true,10,'center',true));
+  setCell(ws2,r,1,'',cs(C.totalTxt,C.totalBg,true,10,'center',true));
+  setCell(ws2,r,2,'TOTAL',cs(C.totalTxt,C.totalBg,true,11,'left',true));
+  setCell(ws2,r,3,tDue2,totRow,INR);
+  setCell(ws2,r,4,tPrev2,totRow,INR);
+  setCell(ws2,r,5,tTot2,totRow,INR);
+  setCell(ws2,r,6,tPaid2,totRow,INR);
+  setCell(ws2,r,7,tBal2,totRow,INR);
+  setCell(ws2,r,8,'',cs(C.totalTxt,C.totalBg,true,10,'center',true));
+
+  ws2['!cols']=[{wch:4},{wch:7},{wch:28},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:10}];
+  setRange(ws2,r,8);
+  XLSX.utils.book_append_sheet(wb,ws2,'Flat-wise Collection');
+
+  // ════════════════════════════════════════════════════════════
+  // SHEET 3 — EXPENSE DETAIL
+  // ════════════════════════════════════════════════════════════
+  const ws3={};
+  r=0;
+  setCell(ws3,r,0,s.societyName+' — Expenses — '+monthLbl(ym),
+          cs(C.tealTxt,C.tealBg,true,13,'center'));
+  merge(ws3,r,0,r,4); r++;
+
+  ['#','Category','Description','Amount (₹)'].forEach((h,c)=>setCell(ws3,r,c,h,hdrStyle));
+  r++;
+
+  let expRunTotal=0;
+  if(exps.length===0){
+    setCell(ws3,r,0,'No expenses recorded for this month',cs(C.darkGrey,C.greyBg,false,10,'center'));
+    merge(ws3,r,0,r,4); r++;
+  } else {
+    const expColors=['2563EB','16A34A','D97706','DC2626','7C3AED','0891B2','DB2777'];
+    const catColorMap={};
+    Object.keys(bycat).forEach((c,i)=>{catColorMap[c]=expColors[i%expColors.length];});
+    exps.forEach((e,i)=>{
+      expRunTotal+=e.amount;
+      const rowBg={patternType:'solid',fgColor:{rgb:i%2===0?'F8FAFC':'FFFFFF'}};
+      setCell(ws3,r,0,i+1,cs(C.darkGrey,rowBg,false,9,'center',true));
+      setCell(ws3,r,1,e.category,cs({rgb:catColorMap[e.category]||'000000'},rowBg,true,10,'left',true));
+      setCell(ws3,r,2,e.desc,cs(C.black,rowBg,false,10,'left',true));
+      setCell(ws3,r,3,e.amount,cs(C.black,rowBg,false,10,'right',true),INR);
+      r++;
+    });
+    setCell(ws3,r,0,'',cs(C.totalTxt,C.totalBg,true,10));
+    setCell(ws3,r,1,'',cs(C.totalTxt,C.totalBg,true,10));
+    setCell(ws3,r,2,'TOTAL EXPENSES',cs(C.totalTxt,C.totalBg,true,11,'left',true));
+    setCell(ws3,r,3,expRunTotal,cs(C.totalTxt,C.totalBg,true,11,'right',true),INR);
+    r+=2;
+
+    // Category sub-totals
+    setCell(ws3,r,0,'CATEGORY WISE TOTALS',cs(C.tealTxt,C.tealBg,true,11,'left'));
+    merge(ws3,r,0,r,4); r++;
+    ['Category','Total Amount (₹)','% Share'].forEach((h,c)=>setCell(ws3,r,c,h,hdrStyle));
+    r++;
+    Object.entries(bycat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt])=>{
+      const rowBg={patternType:'solid',fgColor:{rgb:'F0FDF4'}};
+      setCell(ws3,r,0,cat,cs(C.black,rowBg,true,10,'left',true));
+      setCell(ws3,r,1,amt,cs(C.black,rowBg,false,10,'right',true),INR);
+      setCell(ws3,r,2,expRunTotal>0?((amt/expRunTotal)*100).toFixed(1)+'%':'0%',cs(C.darkGrey,rowBg,false,10,'center',true));
+      r++;
+    });
+  }
+
+  ws3['!cols']=[{wch:4},{wch:22},{wch:38},{wch:16}];
+  setRange(ws3,r,4);
+  XLSX.utils.book_append_sheet(wb,ws3,'Expense Detail');
+
+  // ════════════════════════════════════════════════════════════
+  // SHEET 4 — YEARLY SUMMARY
+  // ════════════════════════════════════════════════════════════
+  const ws4={};
+  r=0;
+  setCell(ws4,r,0,s.societyName+' — Yearly Summary '+s.year,
+          cs(C.navyTxt,C.navyBg,true,14,'center'));
+  merge(ws4,r,0,r,8); r++;
+
+  const th4=['Month','Monthly Due (₹)','Prev Arrears (₹)','Total Due (₹)','Collected (₹)','Pending (₹)','Expenses (₹)','Net Balance (₹)','Status'];
+  th4.forEach((h,c)=>setCell(ws4,r,c,h,hdrStyle));
+  r++;
+
+  let yTD=0,yTP=0,yTR=0,yTC=0,yTPend=0,yTE=0;
+  for(let m=1;m<=12;m++){
+    const mym=s.year+'-'+String(m).padStart(2,'0');
+    const ms2=calcMaintStats(mym);
+    const exp2=calcExpStats(mym);
+    const bal2=ms2.totalPaid-exp2;
+    yTD+=ms2.totalDue; yTP+=ms2.totalPrevBal; yTR+=ms2.totalRequired;
+    yTC+=ms2.totalPaid; yTPend+=ms2.totalPending; yTE+=exp2;
+    const isCur=mym===ym;
+    const hasData=Object.keys(getMaint(mym)).length>0||getExp(mym).length>0;
+    const rowBg=isCur?{patternType:'solid',fgColor:{rgb:'EFF6FF'}}:hasData?{patternType:'solid',fgColor:{rgb:'F8FAFC'}}:{patternType:'solid',fgColor:{rgb:'FFFFFF'}};
+    const balBg=bal2>=0?{patternType:'solid',fgColor:{rgb:'DCFCE7'}}:{patternType:'solid',fgColor:{rgb:'FEE2E2'}};
+    const base=cs(C.black,rowBg,isCur,10,'right',true);
+    setCell(ws4,r,0,MONTHS[m-1]+' '+s.year,cs(isCur?{rgb:'1D4ED8'}:C.black,rowBg,isCur,10,'left',true));
+    setCell(ws4,r,1,ms2.totalDue,base,INR);
+    setCell(ws4,r,2,ms2.totalPrevBal,base,INR);
+    setCell(ws4,r,3,ms2.totalRequired,cs(C.black,rowBg,true,10,'right',true),INR);
+    setCell(ws4,r,4,ms2.totalPaid,cs({rgb:'16A34A'},rowBg,true,10,'right',true),INR);
+    setCell(ws4,r,5,ms2.totalPending,cs(ms2.totalPending>0?{rgb:'DC2626'}:C.black,rowBg,ms2.totalPending>0,10,'right',true),INR);
+    setCell(ws4,r,6,exp2,cs({rgb:'D97706'},rowBg,false,10,'right',true),INR);
+    setCell(ws4,r,7,bal2,cs(bal2>=0?{rgb:'15803D'}:{rgb:'DC2626'},balBg,true,10,'right',true),INR);
+    setCell(ws4,r,8,!hasData?'—':isCur?'◀ Current':'✓',cs(C.darkGrey,rowBg,false,9,'center',true));
+    r++;
+  }
+  // Year total
+  const yearBal=yTC-yTE;
+  setCell(ws4,r,0,'YEAR TOTAL '+s.year,cs(C.totalTxt,C.totalBg,true,11,'left',true));
+  setCell(ws4,r,1,yTD,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+  setCell(ws4,r,2,yTP,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+  setCell(ws4,r,3,yTR,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+  setCell(ws4,r,4,yTC,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+  setCell(ws4,r,5,yTPend,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+  setCell(ws4,r,6,yTE,cs(C.totalTxt,C.totalBg,true,10,'right',true),INR);
+  setCell(ws4,r,7,yearBal,cs(yearBal>=0?{rgb:'34D399'}:{rgb:'FCA5A5'},C.totalBg,true,10,'right',true),INR);
+  setCell(ws4,r,8,yearBal>=0?'SURPLUS':'DEFICIT',cs(yearBal>=0?{rgb:'34D399'}:{rgb:'FCA5A5'},C.totalBg,true,10,'center',true));
+
+  ws4['!cols']=[{wch:14},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:10}];
+  setRange(ws4,r,8);
+  XLSX.utils.book_append_sheet(wb,ws4,'Yearly Summary');
+
+  // ── Write file ──────────────────────────────────────────────
+  const fname='Society_Report_'+ym+'.xlsx';
+  XLSX.writeFile(wb,fname);
+  toast('📊 Professional Excel report exported!');
+}
+
+
+// ══════════════════════════════════════════════════════════════
+//  EXPORT PDF — Professional formatted report
+// ══════════════════════════════════════════════════════════════
+function exportPDF(){
+  const ym      = reportMonth || curMonth();
+  const owners  = getOwners();
+  const maint   = getMaint(ym);
+  const pb      = getPrevBal();
+  const exps    = getExp(ym);
+  const ob      = getOpeningBal();
+  const s       = getSettings();
+  const ms      = calcMaintStats(ym);
+  let totalExpAmt = 0; exps.forEach(e => totalExpAmt += e.amount||0);
+  const bycat   = {};
+  exps.forEach(e => { bycat[e.category] = (bycat[e.category]||0) + e.amount; });
+  const openingFund = ob.amount||0;
+  const fundBalance = openingFund + ms.totalPaid - totalExpAmt;
+  const netBalance  = ms.totalPaid - totalExpAmt;
+  const paidFlats   = owners.filter(o => { const d=(o.monthlyDue||0)+Math.max(0,pb[o.flatNo]?.amount||0); return d>0 && (maint[o.flatNo]||0)>=d; });
+  const partFlats   = owners.filter(o => { const d=(o.monthlyDue||0)+Math.max(0,pb[o.flatNo]?.amount||0); const p=maint[o.flatNo]||0; return p>0 && p<d; });
+  const unpaidFlats = owners.filter(o => (maint[o.flatNo]||0)===0);
+
+  // Pre-compute yearly data
+  const yearRowsData = [];
+  const yearTotals = {due:0,prev:0,paid:0,pending:0,exp:0};
+  for(let m=1;m<=12;m++){
+    const mym2 = s.year+'-'+String(m).padStart(2,'0');
+    const ms2  = calcMaintStats(mym2);
+    const exp2 = calcExpStats(mym2);
+    const hasData = Object.keys(getMaint(mym2)).length>0 || getExp(mym2).length>0;
+    yearRowsData.push({mi:m-1, mym:mym2, lbl:MONTHS[m-1]+' '+s.year,
+      due:ms2.totalDue, prev:ms2.totalPrevBal, paid:ms2.totalPaid,
+      pending:ms2.totalPending, exp:exp2, hasData});
+    yearTotals.due     += ms2.totalDue;
+    yearTotals.prev    += ms2.totalPrevBal;
+    yearTotals.paid    += ms2.totalPaid;
+    yearTotals.pending += ms2.totalPending;
+    yearTotals.exp     += exp2;
+  }
+
+  const html = buildPDFHTML({ym,owners,maint,pb,exps,ob,s,ms,totalExpAmt,bycat,
+    openingFund,fundBalance,netBalance,paidFlats,partFlats,unpaidFlats,
+    yearRowsData,yearTotals});
+
+  // ── Use Blob URL — bypasses ALL popup blockers ──────────────
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+
+  // Create hidden iframe, load content, print, then clean up
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
+  document.body.appendChild(iframe);
+
+  iframe.onload = function(){
+    try {
+      // Give fonts/images time to load
+      setTimeout(()=>{
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        // Clean up after print dialog closes
+        setTimeout(()=>{
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        }, 3000);
+      }, 800);
+    } catch(e){
+      // Fallback: open in new tab if iframe print fails
+      window.open(url,'_blank');
+    }
+  };
+  iframe.src = url;
+  toast('📄 Print dialog opening... select "Save as PDF"');
+}
+
+function fmtN(n){ return '₹'+(n||0).toLocaleString('en-IN'); }
+
+function buildPDFHTML(d){
+  // Local aliases to global helpers — defensive fix
+  const _monthLbl = (ym) => { const[y,m]=ym.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]+' '+y; };
+  const {ym,owners,maint,pb,exps,s,ms,totalExpAmt,bycat,
+         openingFund,fundBalance,netBalance,paidFlats,partFlats,unpaidFlats} = d;
+
+  // Expense breakdown rows
+  const expCatRows = Object.entries(bycat).sort((a,b)=>b[1]-a[1]).map(([cat,amt],i)=>{
+    const pct = totalExpAmt>0 ? ((amt/totalExpAmt)*100).toFixed(1) : '0.0';
+    const colors=['#2563EB','#16A34A','#D97706','#DC2626','#7C3AED','#0891B2','#DB2777'];
+    return `<tr>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colors[i%colors.length]};margin-right:6px;"></span>${cat}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtN(amt)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;">${pct}%</td>
+    </tr>`;
+  }).join('');
+
+  // Flat-wise rows
+  const flatRows = owners.map((o,i)=>{
+    const m=o.monthlyDue||0, prev=Math.max(0,pb[o.flatNo]?.amount||0);
+    const tot=m+prev, paid=maint[o.flatNo]||0, bal=Math.max(0,tot-paid);
+    const st=paid>=tot&&tot>0?'Paid':paid>0?'Partial':'Unpaid';
+    const rowBg = i%2===0?'#ffffff':'#f8fafc';
+    const stColor = st==='Paid'?'#15803d':st==='Partial'?'#92400e':'#dc2626';
+    const stBg   = st==='Paid'?'#dcfce7':st==='Partial'?'#fef3c7':'#fee2e2';
+    return `<tr style="background:${rowBg}">
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;font-size:10px;">${i+1}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;font-weight:700;text-align:center;">${o.flatNo}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;font-family:'Noto Sans Devanagari',sans-serif;font-size:11px;">${o.ownerName}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right;">${fmtN(m)}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right;color:${prev>0?'#d97706':'#94a3b8'};">${prev>0?fmtN(prev):'—'}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtN(tot)}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right;color:#16a34a;font-weight:600;">${fmtN(paid)}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right;color:${bal>0?'#dc2626':'#16a34a'};">${fmtN(bal)}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:center;">
+        <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:9px;font-weight:700;background:${stBg};color:${stColor};">${st}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Expense detail rows
+  const expRows = exps.length>0 ? exps.map((e,i)=>{
+    return `<tr style="background:${i%2===0?'#ffffff':'#f8fafc'}">
+      <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;text-align:center;color:#64748b;">${i+1}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;"><span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;">${e.category}</span></td>
+      <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;color:#475569;">${e.desc}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">₹${(e.amount||0).toLocaleString('en-IN')}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="4" style="padding:14px;text-align:center;color:#94a3b8;">No expenses recorded.</td></tr>`;
+
+  // Yearly rows — use pre-computed data passed from exportPDF
+  const yearRows = d.yearRowsData.map(row => {
+    const isCur = row.mym === d.ym;
+    const bal2  = row.paid - row.exp;
+    return `<tr style="background:${isCur?'#eff6ff':row.mi%2===0?'#ffffff':'#f8fafc'}">
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-weight:${isCur?700:400};color:${isCur?'#1d4ed8':'#1e293b'};">${row.lbl}${isCur?' ◀':''}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${fmtN(row.due)}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right;color:#d97706;">${row.prev>0?fmtN(row.prev):'—'}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right;color:#16a34a;font-weight:600;">${fmtN(row.paid)}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right;color:${row.pending>0?'#dc2626':'#16a34a'};">${fmtN(row.pending)}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right;color:#d97706;">${fmtN(row.exp)}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:${bal2>=0?'#16a34a':'#dc2626'};">${fmtN(bal2)}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:center;">
+        ${!row.hasData?'<span style="color:#94a3b8;font-size:10px;">—</span>':'<span style="font-size:10px;background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:10px;">✓</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Summary stat cards
+  const stats = [
+    {label:'Monthly Due',value:fmtN(ms.totalDue),color:'#2563EB',light:'#dbeafe'},
+    {label:'Prev. Arrears',value:fmtN(ms.totalPrevBal),color:'#D97706',light:'#fef3c7'},
+    {label:'Total Due',value:fmtN(ms.totalRequired),color:'#7C3AED',light:'#ede9fe'},
+    {label:'Collected',value:fmtN(ms.totalPaid),color:'#16A34A',light:'#dcfce7'},
+    {label:'Pending',value:fmtN(ms.totalPending),color:'#DC2626',light:'#fee2e2'},
+    {label:'Total Expenses',value:fmtN(totalExpAmt),color:'#0891B2',light:'#cffafe'},
+    {label:'Net Balance',value:fmtN(Math.abs(netBalance)),color:netBalance>=0?'#16A34A':'#DC2626',light:netBalance>=0?'#dcfce7':'#fee2e2'},
+    {label:'Fund Balance',value:fmtN(Math.abs(fundBalance)),color:fundBalance>=0?'#16A34A':'#DC2626',light:fundBalance>=0?'#dcfce7':'#fee2e2'},
+  ];
+  const statCards = stats.map(st=>`
+    <div style="background:${st.light};border:1px solid ${st.color}22;border-radius:10px;padding:12px 14px;min-width:130px;flex:1;">
+      <div style="font-size:10px;color:#475569;margin-bottom:4px;font-weight:600;text-transform:uppercase;">${st.label}</div>
+      <div style="font-size:18px;font-weight:800;color:${st.color};font-family:'Arial',sans-serif;">${st.value}</div>
+    </div>`).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Society Report — ${_monthLbl(d.ym)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;font-size:12px;color:#1e293b;background:#fff;line-height:1.5;}
+  @page{size:A4;margin:15mm 12mm;}
+  @media print{
+    .page-break{page-break-before:always;}
+    body{font-size:11px;}
+    .no-break{page-break-inside:avoid;}
+  }
+  table{width:100%;border-collapse:collapse;}
+  th{background:#1e3a5f;color:#fff;padding:8px 10px;font-size:10px;text-align:left;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  th.right{text-align:right;} th.center{text-align:center;}
+  .section-title{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:10px 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-radius:6px 6px 0 0;margin-top:20px;display:flex;align-items:center;gap:8px;}
+  .section-wrap{border:1px solid #cbd5e1;border-radius:0 0 6px 6px;overflow:hidden;margin-bottom:8px;}
+  .total-row td{background:#1e293b!important;color:#f8fafc!important;font-weight:700;padding:8px 10px!important;}
+</style>
+</head>
+<body>
+
+<!-- ══ COVER / HEADER ══ -->
+<div style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 60%,#1d4ed8 100%);color:#fff;padding:28px 24px 20px;border-radius:10px;margin-bottom:20px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">${s.societyName}</div>
+      <div style="font-size:14px;margin-top:4px;opacity:0.85;">Maintenance &amp; Expense Report</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:20px;font-weight:700;background:rgba(255,255,255,0.15);padding:8px 16px;border-radius:8px;">${_monthLbl(d.ym)}</div>
+      <div style="font-size:10px;margin-top:4px;opacity:0.75;">Generated: ${new Date().toLocaleDateString('en-IN')}</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:16px;font-size:11px;opacity:0.85;">
+    <div>📋 Total Flats: <strong>${owners.length}</strong></div>
+    <div>✅ Fully Paid: <strong>${paidFlats.length}</strong></div>
+    <div>⚡ Partial: <strong>${partFlats.length}</strong></div>
+    <div>❌ Unpaid: <strong>${unpaidFlats.length}</strong></div>
+    <div>📊 Working Year: <strong>${s.year}</strong></div>
+  </div>
+</div>
+
+<!-- ══ STAT CARDS ══ -->
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" class="no-break">
+  ${statCards}
+</div>
+
+<!-- ══ FINANCIAL SUMMARY TABLE ══ -->
+<div class="no-break">
+<div class="section-title">📊 A. Financial Summary</div>
+<div class="section-wrap">
+<table>
+  <thead><tr><th style="width:50%;">Head</th><th class="right" style="width:20%;">Amount (₹)</th><th style="width:30%;">Remarks</th></tr></thead>
+  <tbody>
+    <tr style="background:#f0fdf4;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:600;">Opening Fund Balance</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:#16a34a;">${fmtN(openingFund)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:10px;">${ob.note||'Balance brought forward'}</td></tr>
+    <tr style="background:#fefce8;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">Monthly Maintenance Due</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtN(ms.totalDue)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:10px;">${owners.length} flats × individual dues</td></tr>
+    <tr style="background:${ms.totalPrevBal>0?'#fff7ed':'#fff'};"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">Previous Arrears</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:${ms.totalPrevBal>0?'#d97706':'#64748b'};">${fmtN(ms.totalPrevBal)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:10px;">Carried from previous months</td></tr>
+    <tr style="background:#fefce8;font-weight:700;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">Total Due (Monthly + Arrears)</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${fmtN(ms.totalRequired)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:10px;">Sum of all dues</td></tr>
+    <tr style="background:#f0fdf4;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:600;">✅ Total Maintenance Collected</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:#16a34a;">${fmtN(ms.totalPaid)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:10px;">Amount actually received</td></tr>
+    <tr style="background:${ms.totalPending>0?'#fef2f2':'#f0fdf4'};"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">Pending / Uncollected</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;color:${ms.totalPending>0?'#dc2626':'#16a34a'};">${fmtN(ms.totalPending)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:10px;">Still to be received</td></tr>
+    <tr style="background:#fff7ed;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:600;">📋 Total Expenses</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:#d97706;">${fmtN(totalExpAmt)}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:10px;">All expense heads combined</td></tr>
+    <tr style="background:${netBalance>=0?'#f0fdf4':'#fef2f2'};font-weight:700;font-size:12px;">
+      <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;">Net Balance (Collected − Expenses)</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;color:${netBalance>=0?'#16a34a':'#dc2626'};">${fmtN(Math.abs(netBalance))} ${netBalance>=0?'▲':'▼'}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:10px;color:${netBalance>=0?'#16a34a':'#dc2626'};">${netBalance>=0?'SURPLUS':'DEFICIT'}</td></tr>
+    <tr style="background:${fundBalance>=0?'#dcfce7':'#fee2e2'};font-weight:800;font-size:13px;">
+      <td style="padding:9px 10px;">💰 Fund Balance (Opening + Collected − Expenses)</td>
+      <td style="padding:9px 10px;text-align:right;color:${fundBalance>=0?'#15803d':'#dc2626'};">${fmtN(Math.abs(fundBalance))} ${fundBalance>=0?'▲':'▼'}</td>
+      <td style="padding:9px 10px;font-weight:700;font-size:11px;color:${fundBalance>=0?'#15803d':'#dc2626'};">${fundBalance>=0?'✅ SURPLUS — Funds Available':'⚠️ DEFICIT — Funds Short'}</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<!-- ══ COLLECTION STATUS ══ -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;" class="no-break">
+  <div>
+    <div class="section-title">📈 B. Collection Status</div>
+    <div class="section-wrap">
+    <table>
+      <thead><tr><th>Status</th><th class="center">Flats</th><th class="right">Amount</th></tr></thead>
+      <tbody>
+        <tr style="background:#dcfce7;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#15803d;">✅ Fully Paid</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:700;">${paidFlats.length}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtN(paidFlats.reduce((s,o)=>s+(maint[o.flatNo]||0),0))}</td></tr>
+        <tr style="background:#fef3c7;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#92400e;">⚡ Partial</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:700;">${partFlats.length}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtN(partFlats.reduce((s,o)=>s+(maint[o.flatNo]||0),0))}</td></tr>
+        <tr style="background:#fee2e2;"><td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#dc2626;">❌ Unpaid</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:700;">${unpaidFlats.length}</td>
+          <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">₹0</td></tr>
+        <tr class="total-row"><td>TOTAL</td><td style="text-align:center;">${owners.length}</td><td style="text-align:right;">${fmtN(ms.totalPaid)}</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <div>
+    <div class="section-title">💸 C. Expenses by Category</div>
+    <div class="section-wrap">
+    <table>
+      <thead><tr><th>Category</th><th class="right">Amount</th><th class="center">%</th></tr></thead>
+      <tbody>
+        ${expCatRows||`<tr><td colspan="3" style="padding:12px;text-align:center;color:#94a3b8;">No expenses</td></tr>`}
+        <tr class="total-row"><td>TOTAL</td><td style="text-align:right;">${fmtN(totalExpAmt)}</td><td style="text-align:center;">100%</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FLAT-WISE COLLECTION ══ -->
+<div class="page-break"></div>
+<div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:10px 16px;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:10px;">
+  🏠 D. Flat-wise Maintenance Collection — ${_monthLbl(d.ym)}
+</div>
+<div style="border:1px solid #cbd5e1;border-radius:0 0 6px 6px;overflow:hidden;margin-bottom:20px;">
+<table>
+  <thead>
+    <tr>
+      <th class="center" style="width:4%;">#</th>
+      <th class="center" style="width:7%;">Room</th>
+      <th style="width:24%;">Member Name</th>
+      <th class="right" style="width:10%;">Monthly Due</th>
+      <th class="right" style="width:10%;">Prev. Bal.</th>
+      <th class="right" style="width:10%;">Total Due</th>
+      <th class="right" style="width:10%;">Paid</th>
+      <th class="right" style="width:10%;">Balance</th>
+      <th class="center" style="width:8%;">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${flatRows}
+    <tr class="total-row">
+      <td colspan="3">TOTAL</td>
+      <td style="text-align:right;">${fmtN(owners.reduce((s,o)=>s+(o.monthlyDue||0),0))}</td>
+      <td style="text-align:right;">${fmtN(owners.reduce((s,o)=>s+Math.max(0,pb[o.flatNo]?.amount||0),0))}</td>
+      <td style="text-align:right;">${fmtN(ms.totalRequired)}</td>
+      <td style="text-align:right;">${fmtN(ms.totalPaid)}</td>
+      <td style="text-align:right;">${fmtN(ms.totalPending)}</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ══ EXPENSE DETAIL ══ -->
+<div class="no-break">
+<div class="section-title">📋 E. Expense Details — ${_monthLbl(d.ym)}</div>
+<div class="section-wrap">
+<table>
+  <thead><tr><th class="center" style="width:5%;">#</th><th style="width:22%;">Category</th><th style="width:50%;">Description</th><th class="right" style="width:23%;">Amount (₹)</th></tr></thead>
+  <tbody>
+    ${expRows}
+    <tr class="total-row"><td colspan="3">TOTAL EXPENSES</td><td style="text-align:right;">${fmtN(totalExpAmt)}</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<!-- ══ YEARLY SUMMARY ══ -->
+<div class="page-break"></div>
+<div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:10px 16px;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:10px;">
+  📅 F. Yearly Summary — ${s.year}
+</div>
+<div style="border:1px solid #cbd5e1;border-radius:0 0 6px 6px;overflow:hidden;">
+<table>
+  <thead><tr>
+    <th style="width:13%;">Month</th>
+    <th class="right" style="width:12%;">Monthly Due</th>
+    <th class="right" style="width:11%;">Prev. Arr.</th>
+    <th class="right" style="width:12%;">Collected</th>
+    <th class="right" style="width:11%;">Pending</th>
+    <th class="right" style="width:11%;">Expenses</th>
+    <th class="right" style="width:12%;">Net Balance</th>
+    <th class="center" style="width:7%;">Data</th>
+  </tr></thead>
+  <tbody>${yearRows}</tbody>
+  <tr class="total-row">
+    <td>YEAR TOTAL</td>
+    <td style="text-align:right;">${fmtN(d.yearTotals.due)}</td>
+    <td style="text-align:right;">${fmtN(d.yearTotals.prev)}</td>
+    <td style="text-align:right;">${fmtN(d.yearTotals.paid)}</td>
+    <td style="text-align:right;">${fmtN(d.yearTotals.pending)}</td>
+    <td style="text-align:right;">${fmtN(d.yearTotals.exp)}</td>
+    <td style="text-align:right;">${fmtN(d.yearTotals.paid - d.yearTotals.exp)}</td>
+    <td></td>
+  </tr>
+</table>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<div style="margin-top:20px;border-top:2px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;">
+  <div>${s.societyName} — ${_monthLbl(d.ym)} Report</div>
+  <div>Generated on ${new Date().toLocaleString('en-IN')}</div>
+  <div>Confidential — Internal Use Only</div>
+</div>
+
+</body>
+</html>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DEVICE FILE BACKUP — File System Access API
+//  Writes to a real file on the device — survives all browser clears
+// ══════════════════════════════════════════════════════════════
+
+// Collect all app data from memory cache
+function collectAllData(){
+  const data={};
+  Object.entries(_memCache).filter(([k])=>k.startsWith('soc_')).forEach(([k,v])=>data[k]=v);
+  Object.keys(localStorage).filter(k=>k.startsWith('soc_')&&!(k in data)).forEach(k=>{
+    try{data[k]=JSON.parse(localStorage.getItem(k));}catch(e){}
+  });
+  return data;
+}
+
+// Save to device file using File System Access API (Chrome/Edge on Android)
+async function saveToDeviceFile(){
+  const data = collectAllData();
+  const json = JSON.stringify(data, null, 2);
+
+  // Method 1: File System Access API (Android Chrome 86+)
+  if('showSaveFilePicker' in window){
+    try {
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: 'SocietyData_'+new Date().toISOString().slice(0,10)+'.json',
+        types:[{description:'Society Data File',accept:{'application/json':['.json']}}],
+      });
+      const writable = await fileHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      toast('✅ Saved to device file!');
+      return;
+    } catch(e){
+      if(e.name==='AbortError') return; // User cancelled
+    }
+  }
+
+  // Method 2: Standard download (always works as fallback)
+  const blob = new Blob([json],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'SocietyData_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('✅ File downloaded to device!');
+}
+
+// Load from device file
+async function loadFromDeviceFile(){
+  // Method 1: File System Access API
+  if('showOpenFilePicker' in window){
+    try {
+      const [fileHandle] = await window.showOpenFilePicker({
+        types:[{description:'Society Data File',accept:{'application/json':['.json']}}],
+        multiple:false
+      });
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      await restoreFromJSON(text);
+      return;
+    } catch(e){
+      if(e.name==='AbortError') return;
+    }
+  }
+  // Method 2: Standard file input
+  document.getElementById('importFile').click();
+}
+
+// Restore all data from JSON string
+async function restoreFromJSON(text){
+  try {
+    const d = JSON.parse(text);
+    await Promise.all(Object.entries(d).map(([k,v])=>{
+      _memCache[k]=v;
+      try{localStorage.setItem(k,JSON.stringify(v));}catch(ex){}
+      return idbSet(k,v);
+    }));
+    refreshAll();
+    showStorageStatus();
+    toast('✅ Data restored from device file!');
+  } catch(e){ toast('❌ Invalid file — could not restore.'); }
+}
+
+// Auto-save to IndexedDB every time data changes (already handled by S())
+// Additionally auto-trigger a silent IDB sync every 5 minutes
+setInterval(()=>{
+  // Sync any localStorage keys not yet in IDB
+  Object.keys(localStorage).filter(k=>k.startsWith('soc_')).forEach(k=>{
+    try {
+      const v = JSON.parse(localStorage.getItem(k));
+      idbSet(k, v).catch(()=>{});
+    } catch(e){}
+  });
+}, 5 * 60 * 1000);
+
+// ══════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════
+function fmt(n){return(n||0).toLocaleString('en-IN');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+['transferModal','dueModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
+});
+
+// ══════════════════════════════════════════════════════════════
+//  PWA — Service Worker Registration + Install Prompt
+// ══════════════════════════════════════════════════════════════
+let deferredInstallPrompt = null;
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/society-manager/sw.js', {scope: '/society-manager/'})
+      .then(reg => console.log('[PWA] SW registered:', reg.scope))
+      .catch(err => console.log('[PWA] SW failed:', err));
+  });
+}
+
+// Capture the install prompt event
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install banner
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'flex';
+});
+
+// App was installed
+window.addEventListener('appinstalled', ()=>{
+  deferredInstallPrompt = null;
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'none';
+  toast('✅ App installed! Open from Home Screen anytime.');
+});
+
+function installApp(){
+  if(!deferredInstallPrompt){ toast('To install: tap browser menu → Add to Home Screen'); return; }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(choice=>{
+    if(choice.outcome==='accepted') toast('✅ Installing app...');
+    deferredInstallPrompt = null;
+    const banner = document.getElementById('installBanner');
+    if(banner) banner.style.display = 'none';
+  });
+}
+
+function dismissInstallBanner(){
+  const banner = document.getElementById('installBanner');
+  if(banner) banner.style.display = 'none';
+}
+</script>
+</body>
+</html>
